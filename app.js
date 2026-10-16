@@ -801,8 +801,8 @@
 
     // Head-to-head records
     const h2h = window.DTDB.computeHeadToHead(scores);
-    let hh = '<h3>Head-to-Head</h3><table class="standings"><tr><th></th>';
-    for (const n of ROSTER) hh += `<th>${n.slice(0,4)}</th>`;
+    let hh = '<h3>Head-to-Head</h3><table class="standings h2h"><tr><th></th>';
+    for (const n of ROSTER) hh += `<th>${n}</th>`;
     hh += '</tr>';
     for (const a of ROSTER) {
       hh += `<tr><td><strong>${a}</strong></td>`;
