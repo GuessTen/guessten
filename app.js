@@ -751,11 +751,16 @@
         // restore their submitted run from the database
         const byRank = {};
         for (const it of puzzle.cat.items) byRank[it.rank] = it;
-        guessed = {};
-        (existing.guessed_ranks || '').split(',').filter(Boolean).forEach(r => {
-          const it = byRank[parseInt(r, 10)];
-          if (it) guessed[it.rank] = it;
-        });
+        // Only overwrite guessed if the database has rank data;
+        // otherwise keep what was restored from localStorage.
+        const dbRanks = (existing.guessed_ranks || '').split(',').filter(Boolean);
+        if (dbRanks.length) {
+          guessed = {};
+          dbRanks.forEach(r => {
+            const it = byRank[parseInt(r, 10)];
+            if (it) guessed[it.rank] = it;
+          });
+        }
         guessesUsed = existing.guesses_used;
         revealed = existing.revealed;
         finished = true;
@@ -796,6 +801,8 @@
     const st = $('submit-status');
     st.textContent = 'Your score is locked in for today. See you tomorrow.';
     st.className = 'ok';
+    // show the full recap: category, correct answers, misses
+    renderRecap(row.revealed);
     // hide the copy-result button to keep it clean (score already submitted)
     $('copy-result-btn').style.display = 'none';
   }
