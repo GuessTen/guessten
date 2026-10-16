@@ -28,16 +28,23 @@
   // Insert a finished score. Returns {ok, error}.
   async function submitScore({ player, day, puzzleNumber, category, score, guessesUsed, revealed, guessedRanks }) {
     if (!client) return { ok: false, error: 'Supabase not configured' };
-    const { error } = await client.from('scores').upsert({
+    const row = {
       player_id: ROSTER_IDS[player],
       day: day,
       puzzle_number: puzzleNumber,
       category: category,
       score: score,
       guesses_used: guessesUsed,
-      revealed: revealed,
-      guessed_ranks: (guessedRanks || []).join(',')
-    }, { onConflict: 'player_id,day' });
+      revealed: revealed
+    };
+    // guessed_ranks column is optional (requires migration)
+    if (guessedRanks && guessedRanks.length) row.guessed_ranks = guessedRanks.join(',');
+    let { error } = await client.from('scores').upsert(row, { onConflict: 'player_id,day' });
+    // if the column doesn't exist yet, retry without it
+    if (error && /guessed_ranks/.test(error.message)) {
+      delete row.guessed_ranks;
+      ({ error } = await client.from('scores').upsert(row, { onConflict: 'player_id,day' }));
+    }
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   }
