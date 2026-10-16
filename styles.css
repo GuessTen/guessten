@@ -84,6 +84,10 @@ header h1 {
 }
 #player-badge { margin-top: 8px; font-size: 0.9rem; color: rgba(255,255,255,0.92); }
 .link-btn { background: none; border: none; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 0; text-decoration: underline; font-weight: 700; }
+.switch-btn {
+  display: block; margin: 8px auto 0; background: rgba(255,255,255,0.2); border: 2px solid #fff;
+  color: #fff; font-weight: 700; font-size: 0.85rem; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+}
 
 #tabs { display: flex; gap: 8px; margin: 18px 0; position: sticky; top: 0; z-index: 5; padding: 10px 0; background: var(--bg); }
 #tabs button {
