@@ -67,6 +67,14 @@
     return data || [];
   }
 
+  // Fetch past seasons (champions history). Returns [] if the table doesn't exist yet.
+  async function fetchSeasons() {
+    if (!client) return [];
+    const { data, error } = await client.from('seasons').select('*').order('season_number', { ascending: false });
+    if (error) { console.log('fetchSeasons:', error.message); return []; }
+    return data || [];
+  }
+
   // Fetch today's scores.
   async function fetchToday(dayISO) {
     if (!client) return [];
@@ -242,6 +250,6 @@
     submitScore, fetchScores, fetchToday, fetchPlayerScore,
     subscribeToday, unsubscribe,
     computeStandings, computeStreaks, judgeDay, groupByDay,
-    computeHeadToHead, savePushSubscription
+    computeHeadToHead, savePushSubscription, fetchSeasons
   };
 })();
