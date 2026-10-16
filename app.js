@@ -48,6 +48,44 @@
     if (revealed) p.set('r', '1');
     if (finished) p.set('f', '1');
     history.replaceState(null, '', '?' + p.toString());
+    saveToStorage();
+  }
+
+  // Backup save to localStorage (survives browser app being killed)
+  function saveToStorage() {
+    try {
+      const data = {
+        player, day: dayISO,
+        g: Object.keys(guessed).map(Number),
+        w: wrongGuesses, o: outsideHits,
+        r: revealed, f: finished
+      };
+      localStorage.setItem('guessten-progress', JSON.stringify(data));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem('guessten-progress');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data.day !== dayISO || !ROSTER.includes(data.player)) return false;
+      const byRank = {};
+      for (const it of puzzle.cat.items) byRank[it.rank] = it;
+      guessed = {};
+      (data.g || []).forEach(r => { if (byRank[r]) guessed[r] = byRank[r]; });
+      wrongGuesses = data.w || [];
+      outsideHits = data.o || [];
+      revealed = !!data.r;
+      finished = !!data.f;
+      player = data.player;
+      guessesUsed = wrongGuesses.length + outsideHits.length;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function clearStorage() {
+    try { localStorage.removeItem('guessten-progress'); } catch (e) {}
   }
 
   function loadFromURL() {
@@ -545,8 +583,8 @@
       if (window.DTDB.init()) console.log('Supabase connected');
       else console.log('Supabase not configured — playing offline');
     }
-    // Restore or pick name
-    if (!loadFromURL()) showPicker();
+    // Restore or pick name: try URL first, then localStorage backup
+    if (!loadFromURL() && !loadFromStorage()) showPicker();
     else { hidePicker(); startGame(); }
     renderArchive();
   }
