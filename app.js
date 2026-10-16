@@ -317,7 +317,35 @@
     "You guess like someone who's never had a thought.",
     "Fuck me, that was atrocious.",
     "I'd rather watch paint dry than watch you play again.",
-    "You're the reason the top hat drinks."
+    "You're the reason the top hat drinks.",
+    "Holy fucking shit, are you even trying? My dead goldfish plays better than this.",
+    "You couldn't find your ass with both hands and a fucking map.",
+    "What the actual fuck is wrong with you? That was braindead.",
+    "I've watched rocks make better decisions than you just did.",
+    "You're playing like you got hit in the head with a fucking brick. Repeatedly.",
+    "Jesus fucking Christ on a cracker, that was godawful.",
+    "Do you have shit for brains? Because that's what that guess tasted like.",
+    "I'd call you a dumbass but that would be an insult to dumbasses everywhere.",
+    "Fuck off with that guess. Seriously, fuck right off.",
+    "You're so fucking bad at this I'm starting to feel sorry for your mother.",
+    "That guess was so shit I need to bleach my fucking eyeballs.",
+    "Are you fucking illiterate? Can you even read the goddamn question?",
+    "You play this game like a blindfolded monkey throwing darts at a wall of shit.",
+    "Goddamn, you suck. Like, historically, impressively, mind-blowingly suck.",
+    "I've got hemorrhoids smarter than you, you absolute fucking waste of oxygen."
+  ];
+  // Escalating roasts: the more consecutive fuck-ups, the meaner he gets
+  const MASCOT_NUCLEAR = [
+    "STOP. Just fucking stop. You're done. Put the phone down, you braindead fuck.",
+    "I have watched you fail so many times I've lost the will to fucking live.",
+    "You are the single dumbest motherfucker I have ever had the displeasure of hosting.",
+    "If stupidity was a crime you'd be on fucking death row right now.",
+    "I would rather gargle broken glass than watch you butcher another goddamn guess.",
+    "You're not just bad, you're a catastrophic fucking failure of a human being.",
+    "Every guess you make kills a brain cell. Mine. I'm getting dumber watching this shit.",
+    "Fuck this. Fuck you. Fuck everything. You're hopeless, you absolute shitstain.",
+    "I've seen roadkill with better instincts than you, you fucking Neanderthal.",
+    "Congratulations, you've achieved a level of suck so profound it's almost art. Almost."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -358,15 +386,23 @@
   function buzz(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
   }
+  // Track consecutive fuck-ups for escalation
+  let consecutiveMisses = 0;
   function mascotReact(type) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    if (type === 'happy') { buzz(30); mascotSay(pick(MASCOT_HAPPY)); }
+    if (type === 'happy') { buzz(30); consecutiveMisses = 0; mascotSay(pick(MASCOT_HAPPY)); }
     else if (type === 'close') { buzz([30, 50, 30]); mascotSay(pick(MASCOT_CLOSE)); }
     else if (type === 'roast') {
       buzz([80, 40, 80]);
-      // go brutal if they're playing really badly (3+ wrong, 2 or fewer correct)
-      const bad = wrongGuesses.length >= 3 && score() <= 2;
-      mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
+      consecutiveMisses++;
+      // Escalate: 5+ consecutive misses = nuclear, 3+ wrong & low score = brutal
+      if (consecutiveMisses >= 5) {
+        buzz([100, 50, 100, 50, 150]);
+        mascotSay(pick(MASCOT_NUCLEAR));
+      } else {
+        const bad = wrongGuesses.length >= 3 && score() <= 2;
+        mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
+      }
     }
     else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); mascotSay(pick(MASCOT_SUDDEN_DEATH)); }
   }
@@ -500,10 +536,11 @@
     $('finish-score').textContent = `${player}: ${score()}/10`;
     $('finish-grid').textContent = gridText();
     renderRecap(wasRevealed);
-    // mascot reacts to final score — brutal for bad scores
+    // mascot reacts to final score — nuclear for truly awful scores
     const finalScore = score();
     if (wasRevealed) mascotSay(pick(MASCOT_BRUTAL));
-    else if (finalScore <= 3) mascotSay(pick(MASCOT_BRUTAL));
+    else if (finalScore <= 2) mascotSay(pick(MASCOT_NUCLEAR));
+    else if (finalScore <= 4) mascotSay(pick(MASCOT_BRUTAL));
     else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
     else if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
     // auto-submit to Supabase
