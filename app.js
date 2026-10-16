@@ -400,6 +400,28 @@
         el.appendChild(d);
       });
     }
+    // Answers you missed (only when game ended, not revealed)
+    if (!wasRevealed) {
+      const missed = [];
+      for (let r = 1; r <= 10; r++) {
+        if (!guessed[r]) {
+          const it = puzzle.cat.items.find(i => i.rank === r);
+          if (it) missed.push(it);
+        }
+      }
+      if (missed.length) {
+        const h = document.createElement('h3');
+        h.textContent = 'You missed';
+        h.className = 'recap-heading recap-missed';
+        el.appendChild(h);
+        missed.forEach(it => {
+          const d = document.createElement('div');
+          d.className = 'recap-item recap-missed-item';
+          d.textContent = `#${it.rank} — ${it.name}`;
+          el.appendChild(d);
+        });
+      }
+    }
   }
 
   function gridText() {
