@@ -43,6 +43,8 @@ header h1 {
   width: 135px; height: auto;
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   z-index: 1;
+  /* blend white background into the page */
+  mix-blend-mode: multiply;
   animation: mascotIdle 3s ease-in-out infinite;
 }
 /* Cloud sits below him, he nestles into it */
