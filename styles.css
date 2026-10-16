@@ -84,6 +84,9 @@ header h1 {
 }
 #player-badge { margin-top: 8px; font-size: 0.9rem; color: rgba(255,255,255,0.92); }
 .link-btn { background: none; border: none; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 0; text-decoration: underline; font-weight: 700; }
+/* Head-to-head table: smaller headers to fit full names */
+.standings.h2h th { font-size: 0.75rem; padding: 8px 4px; }
+.standings.h2h td { padding: 8px 4px; font-size: 0.9rem; }
 /* App loading spinner */
 #app-loader {
   position: fixed; inset: 0; z-index: 1000;
