@@ -1200,6 +1200,25 @@
 
   document.addEventListener('DOMContentLoaded', boot);
 
+  // ---------- Dark mode toggle ----------
+  const themeBtn = document.getElementById('theme-toggle');
+  function applyTheme(dark) {
+    document.body.classList.toggle('dark', dark);
+    if (themeBtn) themeBtn.textContent = dark ? '☀️' : '🌙';
+    try { localStorage.setItem('guessten-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+  // restore saved preference (default: follow system)
+  (function initTheme() {
+    let dark = false;
+    try {
+      const saved = localStorage.getItem('guessten-theme');
+      if (saved) dark = saved === 'dark';
+      else if (window.matchMedia) dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch (e) {}
+    applyTheme(dark);
+  })();
+  if (themeBtn) themeBtn.onclick = () => applyTheme(!document.body.classList.contains('dark'));
+
   // Register service worker for installable home-screen app + offline
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
