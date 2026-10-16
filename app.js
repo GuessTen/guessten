@@ -281,30 +281,43 @@
     "The cane almost dropped on that one!"
   ];
   const MASCOT_ROAST = [
-    "Did you even try?",
-    "My grandmother got that one...",
-    "Yikes. Just... yikes.",
-    "The top hat is disappointed.",
-    "That was... a choice.",
-    "Bold strategy. Terrible, but bold.",
+    "Did you even try, you dumbass?",
+    "My grandmother got that one and she's dead.",
+    "Yikes. Just... fucking yikes.",
+    "The top hat is disappointed in you.",
+    "That was... a choice. A shit one.",
+    "Bold strategy. Fucking terrible, but bold.",
     "What the fuck was that?",
     "Are you fucking kidding me right now?",
     "Jesus Christ, that was awful.",
     "I'd roast you but the answers already did.",
-    "Do you even know what a top 10 is?",
-    "That guess was dogshit.",
+    "Do you even know what a top 10 is, moron?",
+    "That guess was absolute dogshit.",
     "The cane just filed for divorce.",
-    "Holy shit, that was bad."
+    "Holy shit, that was bad.",
+    "I've seen better guesses from a drunk toddler.",
+    "You play like you're trying to lose.",
+    "That was so bad I felt it in my mustache.",
+    "Were you dropped on your head as a child?",
+    "Congratulations, that's the dumbest shit I've heard today.",
+    "You couldn't guess your way out of a paper bag."
   ];
   const MASCOT_BRUTAL = [
     "You're fucking embarrassing yourself.",
     "I've seen smarter moves from a concussed pigeon.",
-    "This is painful to watch. Genuinely painful.",
+    "This is painful to watch. Genuinely fucking painful.",
     "Are you doing this on purpose? You have to be.",
     "Fucking hell. Just... fucking hell.",
     "Your brain called, it wants a refund.",
     "I'd tell you to try harder but I'm not sure you can.",
-    "This is the worst shit I've ever seen."
+    "This is the worst shit I've ever seen.",
+    "You absolute fucking donkey.",
+    "Did your parents have any children that lived?",
+    "I'm dumber just from watching you play.",
+    "You guess like someone who's never had a thought.",
+    "Fuck me, that was atrocious.",
+    "I'd rather watch paint dry than watch you play again.",
+    "You're the reason the top hat drinks."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -460,6 +473,12 @@
     $('finish-score').textContent = `${player}: ${score()}/10`;
     $('finish-grid').textContent = gridText();
     renderRecap(wasRevealed);
+    // mascot reacts to final score — brutal for bad scores
+    const finalScore = score();
+    if (wasRevealed) mascotSay(pick(MASCOT_BRUTAL));
+    else if (finalScore <= 3) mascotSay(pick(MASCOT_BRUTAL));
+    else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
+    else if (finalScore === 10) mascotReact('happy');
     // auto-submit to Supabase
     autoSubmit();
   }
