@@ -44,6 +44,13 @@ header h1 {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-6px) rotate(2deg); }
 }
+#mascot.walking {
+  animation: mascotWalk 0.4s ease-in-out infinite;
+}
+@keyframes mascotWalk {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  50% { transform: translateY(-4px) rotate(8deg); }
+}
 #mascot:active {
   animation: mascotWiggle 0.5s ease;
 }
