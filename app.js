@@ -346,11 +346,15 @@
       x = pad + Math.random() * (maxX - pad);
       y = pad + Math.random() * (maxY - pad);
     }
+    // add walking wobble while moving
+    mascotEl.classList.add('walking');
     mascotEl.style.left = x + 'px';
     mascotEl.style.top = y + 'px';
     positionSpeech();
-    // wander again in 8-14 seconds
-    setTimeout(wanderMascot, 8000 + Math.random() * 6000);
+    // remove wobble after transition completes
+    setTimeout(() => mascotEl.classList.remove('walking'), 2600);
+    // wander again in 5-9 seconds
+    setTimeout(wanderMascot, 5000 + Math.random() * 4000);
   }
   function positionSpeech() {
     const speech = $('mascot-speech');
