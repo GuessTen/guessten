@@ -3,7 +3,8 @@
   'use strict';
 
   const ROSTER = ['Jake', 'Kevin', 'Alex', 'Joey'];
-  const EPOCH_ISO = '2026-10-16'; // Day 1 (America/Chicago)
+  const EPOCH_ISO = '2026-10-16'; // Category rotation start (America/Chicago)
+  const QUIZ_EPOCH_ISO = '2026-10-17'; // Official Quiz 1 (trial day Oct 16 wiped)
   const MAX_GUESSES = 15;
 
   // ---------- Date / day ----------
@@ -18,7 +19,8 @@
   function categoryForDay(idx) {
     const cats = window.DAILY_TEN_CATEGORIES;
     const n = cats.length;
-    return { cat: cats[((idx % n) + n) % n], puzzleNumber: idx + 1 };
+    // Quiz number: Oct 17 (idx=1) = Quiz 1. Oct 16 (idx=0) was the trial.
+    return { cat: cats[((idx % n) + n) % n], puzzleNumber: idx };
   }
 
   // ---------- State ----------
