@@ -151,7 +151,8 @@
     opts.innerHTML = '';
     ROSTER.forEach(n => {
       const b = document.createElement('button');
-      b.textContent = n;
+      b.className = 'name-option';
+      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-pick" /><span>${n}</span>`;
       b.onclick = () => { pendingName = n; $('confirm-name').textContent = n; $('name-confirm').classList.remove('hidden'); };
       opts.appendChild(b);
     });
@@ -642,7 +643,11 @@
         const name = idToName[r.player_id] || r.player_id;
         const div = document.createElement('div');
         div.className = 'score-row' + (winners.includes(r.player_id) ? ' winner' : '');
-        div.innerHTML = `<span class="who">${escapeHtml(name)}${r.revealed ? ' (revealed)' : ''}</span>
+        const isWinner = winners.includes(r.player_id);
+        const isTie = isWinner && winners.length > 1;
+        const isLoser = sorted.length > 1 && r === sorted[sorted.length - 1] && !isWinner;
+        const hat = isTie ? '<span class="avatar-hat">🤝</span>' : isWinner ? '<span class="avatar-hat">👑</span>' : isLoser ? '<span class="avatar-hat">🤡</span>' : '';
+        div.innerHTML = `<span class="who"><span class="avatar-wrap"><img src="avatars/${name.toLowerCase()}.webp" alt="${escapeHtml(name)}" class="avatar-score" />${hat}</span>${escapeHtml(name)}${r.revealed ? ' (revealed)' : ''}</span>
           <span><span class="sc">${r.score}/10</span> <span class="sub">${r.guesses_used} guesses</span></span>`;
         board.appendChild(div);
       }
@@ -672,7 +677,7 @@
     let html = '<table class="standings"><tr><th>Player</th><th>W</th><th>L</th><th>T</th><th>Pts</th></tr>';
     for (const n of sorted) {
       const t = table[n];
-      html += `<tr><td><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td><td>${t.totalScore}</td></tr>`;
+      html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td><td>${t.totalScore}</td></tr>`;
     }
     sb.innerHTML = html + '</table><p class="muted">A day counts once all four have played.</p>';
 
@@ -708,6 +713,9 @@
     if (player) {
       $('player-badge').classList.remove('hidden');
       $('player-name').textContent = player;
+      const av = $('player-avatar');
+      av.src = `avatars/${player.toLowerCase()}.webp`;
+      av.alt = player;
     } else $('player-badge').classList.add('hidden');
   }
   $('switch-player').onclick = () => { showPicker(); };
