@@ -182,11 +182,22 @@
     return streaks;
   }
 
+  async function savePushSubscription(playerId, subscriptionJson) {
+    if (!client) return { ok: false, error: 'Supabase not configured' };
+    const { error } = await client.from('push_subscriptions').upsert(
+      { player_id: playerId, subscription: subscriptionJson, updated_at: new Date().toISOString() },
+      { onConflict: 'player_id' }
+    );
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  }
+
   window.DTDB = {
     ROSTER, ROSTER_IDS,
     configured, init, isReady,
     submitScore, fetchScores, fetchToday, fetchPlayerScore,
     subscribeToday, unsubscribe,
-    computeStandings, computeStreaks, judgeDay, groupByDay
+    computeStandings, computeStreaks, judgeDay, groupByDay,
+    savePushSubscription
   };
 })();
