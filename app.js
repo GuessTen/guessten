@@ -705,8 +705,6 @@
     } else $('player-badge').classList.add('hidden');
   }
   $('switch-player').onclick = () => { showPicker(); };
-  const swBig = $('switch-player-big');
-  if (swBig) swBig.onclick = () => { showPicker(); };
 
   // ---------- Picker wiring ----------
   $('confirm-yes').onclick = () => {
