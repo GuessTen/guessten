@@ -22,6 +22,9 @@ body {
   margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.5;
   max-width: 560px; margin: 0 auto; padding: 0 16px 40px;
+  background-image: url('dragon-bg.svg');
+  background-repeat: repeat;
+  background-size: 400px 400px;
 }
 header {
   text-align: center; padding: 30px 0 16px; margin: 0 -16px 4px;
@@ -34,19 +37,19 @@ header h1 {
 }
 #mascot-cloud {
   position: fixed; z-index: 30; pointer-events: none;
-  width: 160px; height: 130px;
-}
-.cloud-svg {
-  position: absolute; bottom: 0; left: 0; width: 160px; height: 80px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  width: 150px; height: 170px;
 }
 #mascot {
-  width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
-  border: 3px solid rgba(255,255,255,0.7);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  width: 110px; height: auto;
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   z-index: 1;
   animation: mascotIdle 3s ease-in-out infinite;
+}
+/* Cloud sits below him, he nestles into it */
+.cloud-svg {
+  position: absolute; bottom: 0; left: 0; width: 150px; height: 75px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  z-index: 2;
 }
 @keyframes mascotIdle {
   0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
