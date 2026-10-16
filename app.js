@@ -721,6 +721,7 @@
       $('tab-' + b.dataset.tab).classList.add('active');
       if (b.dataset.tab === 'today') renderToday();
       if (b.dataset.tab === 'season') renderSeason();
+      if (b.dataset.tab === 'stats') renderStats();
       if (b.dataset.tab === 'archive') renderArchive();
     };
   });
@@ -816,24 +817,226 @@
       hh += '</tr>';
     }
     stb.innerHTML += hh + '</table><p class="muted">Days each player beat the other head-to-head.</p>';
+
+    // Rivalry ticker — spicy callouts based on the data
+    const ticker = $('rivalry-ticker');
+    const callouts = [];
+    // Win streaks (3+)
+    for (const n of ROSTER) {
+      const s = streaks[n];
+      if (s.type === 'W' && s.count >= 3) {
+        callouts.push({ emoji: '🔥', text: `${n} has won ${s.count} straight — can anyone stop them?` });
+      } else if (s.type === 'L' && s.count >= 3) {
+        callouts.push({ emoji: '🧊', text: `${n} has lost ${s.count} in a row… rough.` });
+      }
+    }
+    // Close head-to-head rivalries (within 1 game, min 3 games played)
+    for (let i = 0; i < ROSTER.length; i++) {
+      for (let j = i + 1; j < ROSTER.length; j++) {
+        const a = ROSTER[i], b = ROSTER[j];
+        const r = h2h[a][b];
+        const total = r.w + r.l + r.t;
+        if (total >= 3 && Math.abs(r.w - r.l) <= 1) {
+          callouts.push({ emoji: '⚔️', text: `${a} vs ${b} is dead even at ${r.w}-${r.l}${r.t ? '-' + r.t : ''}` });
+        } else if (total >= 3 && (r.w === 0 || r.l === 0) && Math.max(r.w, r.l) >= 3) {
+          const dom = r.w > r.l ? a : b, sub = r.w > r.l ? b : a;
+          callouts.push({ emoji: '💀', text: `${dom} owns ${sub} (${Math.max(r.w, r.l)}-${Math.min(r.w, r.l)})` });
+        }
+      }
+    }
+    // Win race leader
+    if (sorted.length >= 2) {
+      const lead = table[sorted[0]], second = table[sorted[1]];
+      const gap = lead.wins - second.wins;
+      if (gap >= 2) {
+        callouts.push({ emoji: '👑', text: `${sorted[0]} leads by ${gap} wins — ${10 - lead.wins} to go` });
+      } else if (gap === 0 && lead.wins > 0) {
+        callouts.push({ emoji: '🤝', text: `${sorted[0]} and ${sorted[1]} are tied at ${lead.wins} wins!` });
+      }
+    }
+    if (callouts.length) {
+      // rotate through callouts every 5 seconds
+      let ti = 0;
+      const showTicker = () => {
+        const c = callouts[ti % callouts.length];
+        ticker.innerHTML = `<span class="ticker-emoji">${c.emoji}</span>${c.text}`;
+        ticker.classList.remove('hidden');
+        ti++;
+      };
+      showTicker();
+      if (window._tickerInterval) clearInterval(window._tickerInterval);
+      if (callouts.length > 1) window._tickerInterval = setInterval(showTicker, 5000);
+    } else {
+      ticker.classList.add('hidden');
+    }
+  }
+
+  // ---------- Deep Dive Stats ----------
+  let statsPlayer = null; // defaults to current player
+  function renderStatsPicker() {
+    const el = $('stats-player-pick');
+    el.innerHTML = '';
+    ROSTER.forEach(n => {
+      const b = document.createElement('button');
+      b.className = 'stats-pick' + ((statsPlayer || player) === n ? ' active' : '');
+      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-inline" /> ${n}`;
+      b.onclick = () => { statsPlayer = n; renderStats(); };
+      el.appendChild(b);
+    });
+  }
+
+  async function renderStats() {
+    renderStatsPicker();
+    const board = $('stats-board');
+    const target = statsPlayer || player || 'Jake';
+    if (!window.DTDB || !window.DTDB.isReady()) {
+      board.innerHTML = '<p class="muted">Stats need Supabase configured.</p>';
+      return;
+    }
+    board.innerHTML = '<p class="muted">Crunching numbers…</p>';
+    const targetId = target.toLowerCase();
+    const scores = await window.DTDB.fetchScores();
+    const mine = scores.filter(s => s.player_id === targetId).sort((a, b) => a.day < b.day ? -1 : 1);
+    if (!mine.length) {
+      board.innerHTML = `<p class="muted">No games yet for ${target}.</p>`;
+      return;
+    }
+
+    const table = window.DTDB.computeStandings(scores);
+    const streaks = window.DTDB.computeStreaks(scores);
+    const t = table[target], st = streaks[target];
+
+    // Basic aggregates
+    const totalScore = mine.reduce((s, r) => s + r.score, 0);
+    const avg = (totalScore / mine.length).toFixed(1);
+    const best = Math.max(...mine.map(r => r.score));
+    const worst = Math.min(...mine.map(r => r.score));
+    const perfects = mine.filter(r => r.score === 10).length;
+    const avgGuesses = (mine.reduce((s, r) => s + r.guesses_used, 0) / mine.length).toFixed(1);
+    const winRate = mine.length ? Math.round(t.wins / mine.length * 100) : 0;
+
+    // Score trend: last 12 games
+    const recent = mine.slice(-12);
+    const maxS = 10;
+    let trend = '<div class="trend">';
+    for (const r of recent) {
+      const h = Math.max(6, r.score / maxS * 80);
+      const cls = r.score >= 8 ? 'hot' : r.score >= 5 ? 'mid' : 'cold';
+      trend += `<div class="trend-bar ${cls}" style="height:${h}px" title="${r.day}: ${r.score}/10"></div>`;
+    }
+    trend += '</div>';
+
+    // Best/worst categories (min 1 game each)
+    const byCat = {};
+    for (const r of mine) {
+      const c = r.category || 'Unknown';
+      (byCat[c] = byCat[c] || { total: 0, n: 0 }).total += r.score;
+      byCat[c].n++;
+    }
+    const catAvg = Object.entries(byCat).map(([c, v]) => ({ c, avg: v.total / v.n, n: v.n }))
+      .sort((a, b) => b.avg - a.avg);
+    const bestCats = catAvg.slice(0, 3);
+    const worstCats = catAvg.slice(-3).reverse();
+
+    // Day of week performance
+    const dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const byDow = {};
+    for (const r of mine) {
+      const d = new Date(r.day + 'T12:00:00');
+      const dow = dowNames[d.getDay()];
+      (byDow[dow] = byDow[dow] || { total: 0, n: 0, wins: 0 }).total += r.score;
+      byDow[dow].n++;
+    }
+    // mark wins per day
+    const byDay = window.DTDB.groupByDay(scores);
+    for (const day of Object.keys(byDay)) {
+      const verdict = window.DTDB.judgeDay(byDay[day]);
+      if (!verdict) continue;
+      const d = new Date(day + 'T12:00:00');
+      const dow = dowNames[d.getDay()];
+      if (byDow[dow] && verdict.winners.includes(targetId)) byDow[dow].wins++;
+    }
+    let dowHtml = '<div class="dow-grid">';
+    for (const d of dowNames) {
+      const v = byDow[d];
+      const a = v ? (v.total / v.n).toFixed(1) : '—';
+      const w = v ? ` (${v.wins}W)` : '';
+      dowHtml += `<div class="dow-cell"><span class="dow-name">${d}</span><span class="dow-avg">${a}${w}</span></div>`;
+    }
+    dowHtml += '</div>';
+
+    // Clutch: wins by margin
+    let blowouts = 0, nailbiters = 0;
+    for (const day of Object.keys(byDay)) {
+      const verdict = window.DTDB.judgeDay(byDay[day]);
+      if (!verdict || !verdict.winners.includes(targetId) || verdict.winners.length > 1) continue;
+      // find runner-up score
+      const rows = byDay[day].filter(r => r.player_id !== targetId && !r.revealed);
+      if (!rows.length) continue;
+      const myScore = byDay[day].find(r => r.player_id === targetId).score;
+      const runnerUp = Math.max(...rows.map(r => r.score));
+      const margin = myScore - runnerUp;
+      if (margin >= 3) blowouts++;
+      else if (margin <= 1) nailbiters++;
+    }
+
+    const streakLabel = !st.type ? '—' : (st.type === 'W' ? `🔥 ${st.count} wins` : `❄️ ${st.count} losses`);
+
+    board.innerHTML = `
+      <div class="stats-hero">
+        <img src="avatars/${target.toLowerCase()}.webp" alt="${target}" class="stats-avatar" />
+        <div>
+          <h3>${target}</h3>
+          <p class="muted">${mine.length} games · ${t.wins}W-${t.losses}L-${t.ties}T</p>
+        </div>
+      </div>
+      <div class="stat-cards">
+        <div class="stat-card"><span class="stat-num">${avg}</span><span class="stat-label">Avg score</span></div>
+        <div class="stat-card"><span class="stat-num">${winRate}%</span><span class="stat-label">Win rate</span></div>
+        <div class="stat-card"><span class="stat-num">${best}</span><span class="stat-label">Best</span></div>
+        <div class="stat-card"><span class="stat-num">${perfects}</span><span class="stat-label">Perfect 10s</span></div>
+        <div class="stat-card"><span class="stat-num">${avgGuesses}</span><span class="stat-label">Avg guesses</span></div>
+        <div class="stat-card"><span class="stat-num">${streakLabel}</span><span class="stat-label">Streak</span></div>
+      </div>
+      <h3>Recent form <span class="muted-sm">(last ${recent.length})</span></h3>
+      ${trend}
+      <div class="trend-legend"><span class="dot hot"></span>8+ <span class="dot mid"></span>5-7 <span class="dot cold"></span>0-4</div>
+      <h3>Best categories</h3>
+      <ul class="stat-list">${bestCats.map(c => `<li><span>${c.c}</span><strong>${c.avg.toFixed(1)}</strong></li>`).join('')}</ul>
+      <h3>Nemesis categories</h3>
+      <ul class="stat-list">${worstCats.map(c => `<li><span>${c.c}</span><strong>${c.avg.toFixed(1)}</strong></li>`).join('')}</ul>
+      <h3>By day of week <span class="muted-sm">(avg score)</span></h3>
+      ${dowHtml}
+      <h3>Clutch factor</h3>
+      <p>💪 ${blowouts} blowout win${blowouts === 1 ? '' : 's'} (3+ pts) · 😰 ${nailbiters} nail-biter${nailbiters === 1 ? '' : 's'} (1 pt)</p>
+    `;
   }
 
   // ---------- Archive ----------
-  function renderArchive() {
+  function renderArchive(filter) {
     const list = $('archive-list');
     list.innerHTML = '';
     const cats = window.DAILY_TEN_CATEGORIES;
+    const q = (filter || '').toLowerCase().trim();
+    let shown = 0;
     for (let i = dayIdx - 1; i >= 0 && i >= dayIdx - 27; i--) {
       const { cat, puzzleNumber } = categoryForDay(i);
+      if (q && !cat.title.toLowerCase().includes(q)) continue;
       const d = new Date(Date.parse(EPOCH_ISO + 'T12:00:00') + i * 86400000);
       const iso = d.toISOString().slice(0, 10);
       const div = document.createElement('div');
       div.className = 'archive-item';
       div.innerHTML = `<div class="d">#${puzzleNumber} · ${iso}</div><div class="t">${escapeHtml(cat.title)}</div>`;
       list.appendChild(div);
+      shown++;
     }
-    if (!list.children.length) list.innerHTML = '<p class="muted">No past puzzles yet.</p>';
+    if (!shown) list.innerHTML = q ? `<p class="muted">No puzzles match "${escapeHtml(filter)}".</p>` : '<p class="muted">No past puzzles yet.</p>';
   }
+  // wire up archive search
+  document.addEventListener('DOMContentLoaded', () => {
+    const s = document.getElementById('archive-search');
+    if (s) s.addEventListener('input', () => renderArchive(s.value));
+  });
 
   // ---------- Player badge / switch ----------
   function updateBadge() {
