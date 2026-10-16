@@ -159,6 +159,21 @@ header h1 {
 #submit-status.ok { color: var(--green); font-weight: 700; }
 #submit-status.err { color: var(--red); }
 
+/* Finish recap — what you got right/wrong (never the missed answers) */
+#finish-recap { text-align: left; margin: 16px 0; }
+.recap-heading { font-size: 1rem; font-weight: 800; margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.recap-correct { color: var(--green); }
+.recap-wrong { color: var(--red); }
+.recap-outside { color: var(--gold); }
+.recap-item {
+  padding: 10px 14px; border-radius: var(--radius); margin-bottom: 6px;
+  font-weight: 600; font-size: 0.95rem; background: var(--surface);
+  border: 2px solid var(--border);
+}
+.recap-correct-item { border-color: var(--green); background: var(--green-bg); }
+.recap-wrong-item { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+.recap-outside-item { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+
 /* Today / Season */
 #live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
 .live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); animation: pulse 1.6s infinite; box-shadow: 0 0 8px var(--green); }
