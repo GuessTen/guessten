@@ -355,16 +355,20 @@
     const greetings = ["Hey!", "What's up?", "I'm watching...", "Make me proud.", "The mustache sees all."];
     mascotSay(greetings[Math.floor(Math.random() * greetings.length)]);
   });
+  function buzz(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+  }
   function mascotReact(type) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    if (type === 'happy') mascotSay(pick(MASCOT_HAPPY));
-    else if (type === 'close') mascotSay(pick(MASCOT_CLOSE));
+    if (type === 'happy') { buzz(30); mascotSay(pick(MASCOT_HAPPY)); }
+    else if (type === 'close') { buzz([30, 50, 30]); mascotSay(pick(MASCOT_CLOSE)); }
     else if (type === 'roast') {
+      buzz([80, 40, 80]);
       // go brutal if they're playing really badly (3+ wrong, 2 or fewer correct)
       const bad = wrongGuesses.length >= 3 && score() <= 2;
       mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
     }
-    else if (type === 'sudden') mascotSay(pick(MASCOT_SUDDEN_DEATH));
+    else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); mascotSay(pick(MASCOT_SUDDEN_DEATH)); }
   }
 
   function selectGuess(it) {
@@ -706,6 +710,37 @@
   }
   $('switch-player').onclick = () => { showPicker(); };
 
+  // ---------- Push notifications ----------
+  const VAPID_PUBLIC_KEY = 'BBmh7EdsGfc08nULouVTQDbWZgvmggyBxfIAdXW4H-4KlmIOzWffxCjrIoUD_GE4pbGZrsf7ZQfT3vxXqdhjQb0';
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  }
+  $('notify-btn').onclick = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Push notifications not supported on this device.');
+      return;
+    }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { alert('Notification permission denied.'); return; }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+      // Save subscription to Supabase
+      if (window.DTDB && player) {
+        await window.DTDB.savePushSubscription(player.toLowerCase(), JSON.stringify(sub.toJSON()));
+        alert('You\'ll get notified when all scores are in! 🔔');
+      }
+    } catch (e) {
+      alert('Could not enable notifications: ' + e.message);
+    }
+  };
+
   // ---------- Picker wiring ----------
   $('confirm-yes').onclick = () => {
     player = pendingName;
@@ -817,7 +852,16 @@
     if (!loadFromURL() && !loadFromStorage()) showPicker();
     else { hidePicker(); startGame(); }
     renderArchive();
+    // Hide the loading spinner now that the app is ready
+    document.getElementById('app-loader').classList.add('hidden');
   }
 
   document.addEventListener('DOMContentLoaded', boot);
+
+  // Register service worker for installable home-screen app + offline
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
 })();
