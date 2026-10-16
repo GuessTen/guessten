@@ -47,6 +47,7 @@
     if (outsideHits.length) p.set('o', outsideHits.map(h => h.rank + ':' + encodeURIComponent(h.name)).join(','));
     if (revealed) p.set('r', '1');
     if (finished) p.set('f', '1');
+    p.set('gu', String(guessesUsed));
     history.replaceState(null, '', '?' + p.toString());
     saveToStorage();
   }
@@ -58,7 +59,7 @@
         player, day: dayISO,
         g: Object.keys(guessed).map(Number),
         w: wrongGuesses, o: outsideHits,
-        r: revealed, f: finished
+        r: revealed, f: finished, gu: guessesUsed
       };
       localStorage.setItem('guessten-progress', JSON.stringify(data));
     } catch (e) { /* storage unavailable */ }
@@ -79,7 +80,8 @@
       revealed = !!data.r;
       finished = !!data.f;
       player = data.player;
-      guessesUsed = wrongGuesses.length + outsideHits.length;
+      guessesUsed = Number.isFinite(data.gu) ? data.gu
+        : Object.keys(guessed).length + wrongGuesses.length + outsideHits.length;
       return true;
     } catch (e) { return false; }
   }
@@ -107,14 +109,16 @@
     });
     revealed = p.get('r') === '1';
     finished = p.get('f') === '1';
-    // correct top-10 answers don't consume guesses
-    guessesUsed = wrongGuesses.length + outsideHits.length;
+    // guessesUsed is persisted explicitly (correct answers count except in sudden death)
+    const guParam = parseInt(p.get('gu'), 10);
+    guessesUsed = Number.isFinite(guParam) ? guParam
+      : Object.keys(guessed).length + wrongGuesses.length + outsideHits.length;
     return true;
   }
 
   // ---------- Progress code ----------
   function encodeProgress() {
-    const data = { v: 1, player, day: dayISO, g: Object.keys(guessed).map(Number), w: wrongGuesses, o: outsideHits, r: revealed, f: finished };
+    const data = { v: 1, player, day: dayISO, g: Object.keys(guessed).map(Number), w: wrongGuesses, o: outsideHits, r: revealed, f: finished, gu: guessesUsed };
     return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
   function decodeProgress(code) {
@@ -132,7 +136,8 @@
       finished = !!data.f;
       player = data.player;
       // correct top-10 answers don't consume guesses
-      guessesUsed = wrongGuesses.length + outsideHits.length;
+      guessesUsed = Number.isFinite(data.gu) ? data.gu
+        : Object.keys(guessed).length + wrongGuesses.length + outsideHits.length;
       return true;
     } catch (e) { return false; }
   }
@@ -267,7 +272,11 @@
 
     if (it.rank >= 1 && it.rank <= 10) {
       guessed[it.rank] = it;
-      // correct top-10 answers do NOT consume a guess
+      // every guess counts, except in sudden death (1 guess left) where
+      // correct answers keep you going without consuming it
+      if (guessesUsed < MAX_GUESSES - 1) {
+        guessesUsed++;
+      }
     } else {
       guessesUsed++;
       outsideHits.push({ name: it.name, rank: it.rank });
