@@ -351,7 +351,7 @@
     speech.style.top = Math.max(10, rect.top + window.scrollY - 60) + 'px';
   }
   // tapping him makes him wiggle and say something
-  mascotEl.addEventListener('click', () => {
+  document.getElementById('mascot').addEventListener('click', () => {
     const greetings = ["Hey!", "What's up?", "I'm watching...", "Make me proud.", "The mustache sees all."];
     mascotSay(greetings[Math.floor(Math.random() * greetings.length)]);
   });
