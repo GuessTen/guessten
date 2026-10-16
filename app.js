@@ -345,8 +345,61 @@
     $('finish-title').textContent = wasRevealed ? 'Answers revealed' : (score() === 10 ? 'Perfect 10!' : 'Puzzle complete');
     $('finish-score').textContent = `${player}: ${score()}/10`;
     $('finish-grid').textContent = gridText();
+    renderRecap(wasRevealed);
     // auto-submit to Supabase
     autoSubmit();
+  }
+
+  // Show what you got right and wrong — but never the answers you missed
+  function renderRecap(wasRevealed) {
+    const el = $('finish-recap');
+    el.innerHTML = '';
+    // Correct answers you actually guessed (not auto-filled on reveal)
+    const actuallyGuessed = wasRevealed
+      ? Object.values(guessed).filter(it => {
+          // on reveal, we can't distinguish; show all as revealed
+          return true;
+        })
+      : Object.values(guessed);
+    const correct = actuallyGuessed.sort((a, b) => a.rank - b.rank);
+    if (correct.length) {
+      const h = document.createElement('h3');
+      h.textContent = wasRevealed ? '✓ Answers (revealed)' : '✓ You got';
+      h.className = 'recap-heading recap-correct';
+      el.appendChild(h);
+      correct.forEach(it => {
+        const d = document.createElement('div');
+        d.className = 'recap-item recap-correct-item';
+        d.textContent = `#${it.rank} — ${it.name}`;
+        el.appendChild(d);
+      });
+    }
+    // Wrong guesses (not in the dataset at all)
+    if (wrongGuesses.length) {
+      const h = document.createElement('h3');
+      h.textContent = '✗ Misses';
+      h.className = 'recap-heading recap-wrong';
+      el.appendChild(h);
+      wrongGuesses.forEach(w => {
+        const d = document.createElement('div');
+        d.className = 'recap-item recap-wrong-item';
+        d.textContent = w;
+        el.appendChild(d);
+      });
+    }
+    // Outside top-10 hits
+    if (outsideHits.length) {
+      const h = document.createElement('h3');
+      h.textContent = 'Outside the top 10';
+      h.className = 'recap-heading recap-outside';
+      el.appendChild(h);
+      outsideHits.slice().sort((a, b) => a.rank - b.rank).forEach(oh => {
+        const d = document.createElement('div');
+        d.className = 'recap-item recap-outside-item';
+        d.textContent = `#${oh.rank} — ${oh.name}`;
+        el.appendChild(d);
+      });
+    }
   }
 
   function gridText() {
