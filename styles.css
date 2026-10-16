@@ -37,6 +37,22 @@ header h1 {
   border: 3px solid rgba(255,255,255,0.5); background: #fff;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
+#mascot-speech {
+  display: inline-block; background: #fff; color: var(--text);
+  border-radius: 16px; padding: 8px 16px; margin: 8px auto 4px;
+  font-weight: 700; font-size: 0.95rem; max-width: 90%;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15); position: relative;
+  animation: speechPop 0.25s ease;
+}
+#mascot-speech::before {
+  content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  border-left: 8px solid transparent; border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+}
+@keyframes speechPop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
 #player-badge { margin-top: 8px; font-size: 0.9rem; color: rgba(255,255,255,0.92); }
 .link-btn { background: none; border: none; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 0; text-decoration: underline; font-weight: 700; }
 
