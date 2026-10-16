@@ -173,6 +173,8 @@ header h1 {
 .recap-correct-item { border-color: var(--green); background: var(--green-bg); }
 .recap-wrong-item { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
 .recap-outside-item { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+.recap-missed { color: var(--muted); }
+.recap-missed-item { border-color: var(--border); background: var(--surface2); color: var(--muted); }
 
 /* Today / Season */
 #live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
