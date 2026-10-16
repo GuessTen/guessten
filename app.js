@@ -533,8 +533,10 @@
         el.appendChild(d);
       });
     }
-    // Answers you missed (only when game ended, not revealed)
-    if (!wasRevealed) {
+    // Answers you missed (only when game ended, not revealed, and we have guess data)
+    // If guessed is empty, we don't know what was guessed (cross-device), so skip this section
+    const hasGuessData = Object.keys(guessed).length > 0 || wrongGuesses.length > 0 || outsideHits.length > 0;
+    if (!wasRevealed && hasGuessData) {
       const missed = [];
       for (let r = 1; r <= 10; r++) {
         if (!guessed[r]) {
@@ -795,11 +797,19 @@
     fa.classList.remove('hidden');
     $('finish-title').textContent = 'Already submitted';
     $('finish-score').textContent = `${player}: ${row.score}/10${row.revealed ? ' (revealed)' : ''}`;
-    let grid = '';
-    for (let r = 1; r <= 10; r++) grid += guessed[r] ? '🟩' : '⬜';
-    $('finish-grid').textContent = grid;
+    // Only show the grid if we have guess data; otherwise it's misleading
+    const hasGuessData = Object.keys(guessed).length > 0;
+    if (hasGuessData) {
+      let grid = '';
+      for (let r = 1; r <= 10; r++) grid += guessed[r] ? '🟩' : '⬜';
+      $('finish-grid').textContent = grid;
+    } else {
+      $('finish-grid').textContent = '';
+    }
     const st = $('submit-status');
-    st.textContent = 'Your score is locked in for today. See you tomorrow.';
+    st.textContent = hasGuessData
+      ? 'Your score is locked in for today. See you tomorrow.'
+      : 'Your score is locked in for today. Play on the same device to see your full recap. See you tomorrow.';
     st.className = 'ok';
     // show the full recap: category, correct answers, misses
     renderRecap(row.revealed);
