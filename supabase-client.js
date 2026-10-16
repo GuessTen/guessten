@@ -2,6 +2,7 @@
 (function () {
   const ROSTER = ['Jake', 'Kevin', 'Alex', 'Joey'];
   const ROSTER_IDS = { 'Jake': 'jake', 'Kevin': 'kevin', 'Alex': 'alex', 'Joey': 'joey' };
+  const ROSTER_IDS_INV = { 'jake': 'Jake', 'kevin': 'Kevin', 'alex': 'Alex', 'joey': 'Joey' };
 
   let client = null;
   let realtimeChannel = null;
@@ -98,6 +99,49 @@
       (map[s.day] = map[s.day] || []).push(s);
     }
     return map;
+  }
+
+  // Head-to-head: for each pair of players, count days where one beat the other.
+  // Only counts days where both played. Win = higher score, tiebreak fewer guesses.
+  // Revealed = automatic loss for that player that day.
+  function computeHeadToHead(scores) {
+    const byDay = groupByDay(scores);
+    const h2h = {};
+    for (const a of ROSTER) {
+      h2h[a] = {};
+      for (const b of ROSTER) h2h[a][b] = { w: 0, l: 0, t: 0 };
+    }
+    for (const day of Object.keys(byDay)) {
+      const rows = byDay[day];
+      const byPid = {};
+      for (const r of rows) {
+        const name = ROSTER_IDS_INV[r.player_id] || r.player_id;
+        if (!byPid[name] || r.score > byPid[name].score ||
+            (r.score === byPid[name].score && r.guesses_used < byPid[name].guesses_used)) {
+          byPid[name] = r;
+        }
+      }
+      const names = Object.keys(byPid);
+      for (let i = 0; i < names.length; i++) {
+        for (let j = i + 1; j < names.length; j++) {
+          const A = byPid[names[i]], B = byPid[names[j]];
+          const aRev = A.revealed, bRev = B.revealed;
+          let result; // 1 = A wins, -1 = B wins, 0 = tie
+          if (aRev && !bRev) result = -1;
+          else if (bRev && !aRev) result = 1;
+          else if (A.score > B.score) result = 1;
+          else if (B.score > A.score) result = -1;
+          else if (A.guesses_used < B.guesses_used) result = 1;
+          else if (B.guesses_used < A.guesses_used) result = -1;
+          else result = 0;
+          const na = names[i], nb = names[j];
+          if (result === 1) { h2h[na][nb].w++; h2h[nb][na].l++; }
+          else if (result === -1) { h2h[na][nb].l++; h2h[nb][na].w++; }
+          else { h2h[na][nb].t++; h2h[nb][na].t++; }
+        }
+      }
+    }
+    return h2h;
   }
 
   // For one day's rows (needs all 4 to count): returns { winnerIds[], tied: bool }
@@ -198,6 +242,6 @@
     submitScore, fetchScores, fetchToday, fetchPlayerScore,
     subscribeToday, unsubscribe,
     computeStandings, computeStreaks, judgeDay, groupByDay,
-    savePushSubscription
+    computeHeadToHead, savePushSubscription
   };
 })();
