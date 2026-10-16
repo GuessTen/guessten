@@ -33,9 +33,22 @@ header h1 {
   font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 #mascot {
-  width: 84px; height: 84px; border-radius: 50%; margin-bottom: 4px;
+  width: 96px; height: 96px; border-radius: 50%; margin-bottom: 4px;
   border: 3px solid rgba(255,255,255,0.5); background: #fff;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: mascotBounce 3s ease-in-out infinite;
+}
+@keyframes mascotBounce {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+#mascot:active {
+  animation: mascotWiggle 0.5s ease;
+}
+@keyframes mascotWiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg) scale(1.05); }
+  75% { transform: rotate(10deg) scale(1.05); }
 }
 #mascot-speech {
   display: inline-block; background: #fff; color: var(--text);
