@@ -1,0 +1,185 @@
+/* Daily Ten — Supabase integration: live scores, standings, streaks */
+(function () {
+  const ROSTER = ['Jake', 'Kevin', 'Alex', 'Joey'];
+  const ROSTER_IDS = { 'Jake': 'jake', 'Kevin': 'kevin', 'Alex': 'alex', 'Joey': 'joey' };
+
+  let client = null;
+  let realtimeChannel = null;
+  const listeners = { today: [], season: [] };
+
+  function configured() {
+    const c = window.DAILY_TEN_CONFIG || {};
+    return c.SUPABASE_URL && !c.SUPABASE_URL.includes('YOUR_PROJECT_REF') && c.SUPABASE_ANON_KEY && !c.SUPABASE_ANON_KEY.includes('YOUR_ANON');
+  }
+
+  function init() {
+    if (!configured() || typeof window.supabase === 'undefined') return false;
+    if (!client) {
+      client = window.supabase.createClient(
+        window.DAILY_TEN_CONFIG.SUPABASE_URL,
+        window.DAILY_TEN_CONFIG.SUPABASE_ANON_KEY
+      );
+    }
+    return true;
+  }
+
+  function isReady() { return !!client; }
+
+  // Insert a finished score. Returns {ok, error}.
+  async function submitScore({ player, day, puzzleNumber, category, score, guessesUsed, revealed, guessedRanks }) {
+    if (!client) return { ok: false, error: 'Supabase not configured' };
+    const { error } = await client.from('scores').upsert({
+      player_id: ROSTER_IDS[player],
+      day: day,
+      puzzle_number: puzzleNumber,
+      category: category,
+      score: score,
+      guesses_used: guessesUsed,
+      revealed: revealed,
+      guessed_ranks: (guessedRanks || []).join(',')
+    }, { onConflict: 'player_id,day' });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  }
+
+  // Fetch one player's submitted score for a day (for replay lockout).
+  async function fetchPlayerScore(playerId, dayISO) {
+    if (!client) return null;
+    const { data, error } = await client.from('scores')
+      .select('*').eq('player_id', playerId).eq('day', dayISO).limit(1);
+    if (error || !data || !data.length) return null;
+    return data[0];
+  }
+
+  // Fetch all scores (for standings). Optionally since a date.
+  async function fetchScores() {
+    if (!client) return [];
+    const { data, error } = await client.from('scores').select('*').order('day', { ascending: true });
+    if (error) { console.error('fetchScores:', error.message); return []; }
+    return data || [];
+  }
+
+  // Fetch today's scores.
+  async function fetchToday(dayISO) {
+    if (!client) return [];
+    const { data, error } = await client.from('scores').select('*').eq('day', dayISO).order('created_at', { ascending: true });
+    if (error) { console.error('fetchToday:', error.message); return []; }
+    return data || [];
+  }
+
+  // Subscribe to realtime score changes. cb receives the full today list each time.
+  async function subscribeToday(dayISO, cb) {
+    if (!client) return;
+    if (realtimeChannel) { client.removeChannel(realtimeChannel); realtimeChannel = null; }
+    const refresh = async () => cb(await fetchToday(dayISO));
+    realtimeChannel = client.channel('scores-today')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scores', filter: `day=eq.${dayISO}` }, refresh)
+      .subscribe();
+    await refresh();
+  }
+
+  function unsubscribe() {
+    if (client && realtimeChannel) { client.removeChannel(realtimeChannel); realtimeChannel = null; }
+  }
+
+  /* ---- Standings math (mirrors league rules) ---- */
+
+  // Group scores by day. Returns { dayISO: [scoreRows] }
+  function groupByDay(scores) {
+    const map = {};
+    for (const s of scores) {
+      (map[s.day] = map[s.day] || []).push(s);
+    }
+    return map;
+  }
+
+  // For one day's rows (needs all 4 to count): returns { winnerIds[], tied: bool }
+  // revealed = automatic loss. Best = highest score, tiebreak fewest guesses.
+  function judgeDay(rows) {
+    const byPlayer = {};
+    for (const r of rows) {
+      const pid = r.player_id;
+      if (!byPlayer[pid] || r.score > byPlayer[pid].score ||
+          (r.score === byPlayer[pid].score && r.guesses_used < byPlayer[pid].guesses_used)) {
+        byPlayer[pid] = r;
+      }
+    }
+    const pids = Object.keys(byPlayer);
+    if (pids.length < 4) return null; // day doesn't count yet
+    // revealed players can't win
+    const eligible = pids.filter(pid => !byPlayer[pid].revealed);
+    const pool = eligible.length ? eligible : pids;
+    let best = -1, bestG = Infinity;
+    for (const pid of pool) {
+      const r = byPlayer[pid];
+      if (r.score > best || (r.score === best && r.guesses_used < bestG)) {
+        best = r.score; bestG = r.guesses_used;
+      }
+    }
+    const winners = pool.filter(pid => byPlayer[pid].score === best && byPlayer[pid].guesses_used === bestG);
+    return { winners, tied: winners.length > 1, rows: byPlayer };
+  }
+
+  // Compute season W-L-T + total score per player.
+  function computeStandings(scores) {
+    const table = {};
+    for (const name of ROSTER) table[name] = { wins: 0, losses: 0, ties: 0, totalScore: 0, daysPlayed: 0 };
+    const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
+    const byDay = groupByDay(scores);
+    const days = Object.keys(byDay).sort();
+    for (const day of days) {
+      const verdict = judgeDay(byDay[day]);
+      if (!verdict) continue;
+      for (const pid of Object.keys(verdict.rows)) {
+        const name = idToName[pid];
+        if (!name) continue;
+        const r = verdict.rows[pid];
+        table[name].daysPlayed++;
+        table[name].totalScore += r.score;
+        if (r.revealed) { table[name].losses++; continue; }
+        if (verdict.winners.includes(pid)) {
+          if (verdict.tied) table[name].ties++;
+          else table[name].wins++;
+        } else {
+          table[name].losses++;
+        }
+      }
+    }
+    return table;
+  }
+
+  // Current win/loss streak per player (most recent counted days, chronological).
+  function computeStreaks(scores) {
+    const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
+    const byDay = groupByDay(scores);
+    const days = Object.keys(byDay).sort();
+    const streaks = {};
+    for (const name of ROSTER) streaks[name] = { type: null, count: 0 };
+    for (const day of days) {
+      const verdict = judgeDay(byDay[day]);
+      if (!verdict) continue;
+      for (const pid of Object.keys(verdict.rows)) {
+        const name = idToName[pid];
+        if (!name) continue;
+        const r = verdict.rows[pid];
+        let result;
+        if (r.revealed) result = 'L';
+        else if (verdict.winners.includes(pid)) result = verdict.tied ? 'T' : 'W';
+        else result = 'L';
+        if (result === 'T') continue; // ties don't break or extend streaks
+        const st = streaks[name];
+        if (st.type === result) st.count++;
+        else { st.type = result; st.count = 1; }
+      }
+    }
+    return streaks;
+  }
+
+  window.DTDB = {
+    ROSTER, ROSTER_IDS,
+    configured, init, isReady,
+    submitScore, fetchScores, fetchToday, fetchPlayerScore,
+    subscribeToday, unsubscribe,
+    computeStandings, computeStreaks, judgeDay, groupByDay
+  };
+})();
