@@ -40,11 +40,13 @@ header h1 {
   width: 180px; height: 200px;
 }
 #mascot {
-  width: 135px; height: auto;
+  width: 135px; height: 135px; border-radius: 50%; object-fit: cover;
+  /* blend the circle into the cloud: same white, soft edge */
+  border: none;
+  box-shadow: 0 0 0 8px rgba(255,255,255,0.9), 0 4px 16px rgba(0,0,0,0.1);
+  background: #fff;
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   z-index: 1;
-  /* blend white background into the page */
-  mix-blend-mode: multiply;
   animation: mascotIdle 3s ease-in-out infinite;
 }
 /* Cloud sits below him, he nestles into it */
