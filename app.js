@@ -339,28 +339,17 @@
     speechTimer = setTimeout(() => el.classList.add('hidden'), 4000);
   }
 
-  // Stationary mascot — sits in a cloud on the left side
-  const mascotEl = document.getElementById('mascot-cloud');
-  function positionMascot() {
-    // fixed position: left side, vertically centered in open space
-    const x = 16;
-    const y = Math.max(120, window.innerHeight * 0.35);
-    mascotEl.style.left = x + 'px';
-    mascotEl.style.top = y + 'px';
-    positionSpeech();
-  }
+  // Mascot sits in header below the title (in-flow, not fixed)
+  // Speech bubble positions relative to the mascot's position in the header
   function positionSpeech() {
     const speech = $('mascot-speech');
     if (speech.classList.contains('hidden')) return;
-    const mx = parseInt(mascotEl.style.left || '0', 10);
-    const my = parseInt(mascotEl.style.top || '0', 10);
-    // speech cloud above the mascot
-    speech.style.left = Math.max(10, mx - 20) + 'px';
-    speech.style.top = Math.max(10, my - 70) + 'px';
+    const cloud = document.getElementById('mascot-cloud');
+    const rect = cloud.getBoundingClientRect();
+    // speech cloud above the mascot, centered
+    speech.style.left = Math.max(10, rect.left + window.scrollX + rect.width / 2 - 110) + 'px';
+    speech.style.top = Math.max(10, rect.top + window.scrollY - 60) + 'px';
   }
-  // position on load and on resize
-  setTimeout(positionMascot, 500);
-  window.addEventListener('resize', positionMascot);
   // tapping him makes him wiggle and say something
   mascotEl.addEventListener('click', () => {
     const greetings = ["Hey!", "What's up?", "I'm watching...", "Make me proud.", "The mustache sees all."];
