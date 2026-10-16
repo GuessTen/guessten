@@ -167,10 +167,10 @@
     }
     const left = MAX_GUESSES - guessesUsed;
     $('guesses-left').textContent = finished ? '' : `${left} guess${left === 1 ? '' : 'es'} left`;
-    // outside top-ten hits
+    // outside top-ten hits, sorted numerically by rank
     const oh = $('outside-top-ten');
     oh.innerHTML = '';
-    outsideHits.forEach(h => {
+    outsideHits.slice().sort((a, b) => a.rank - b.rank).forEach(h => {
       const d = document.createElement('div');
       d.className = 'outside-hit';
       d.textContent = `${h.name} — #${h.rank} (outside the top 10)`;
