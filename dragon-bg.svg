@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-  <g fill="none" stroke="#c8dcf0" stroke-width="1.2" opacity="0.22">
+  <g fill="none" stroke="#a9c6e8" stroke-width="1.4" opacity="0.38">
     <!-- Stylized Japanese dragon - curved body -->
     <path d="M50,300 Q80,250 60,200 Q40,150 80,120 Q110,100 100,70 Q95,50 110,40" stroke-linecap="round"/>
     <!-- Dragon head -->
@@ -13,7 +13,7 @@
     <!-- Cloud swirls (Japanese style) -->
     <path d="M250,100 q15,-15 30,0 q15,15 30,0" stroke-linecap="round"/>
     <path d="M250,120 q15,-15 30,0 q15,15 30,0" stroke-linecap="round"/>
-    <circle cx="280" cy="85" r="3" fill="#c8dcf0" stroke="none"/>
+    <circle cx="280" cy="85" r="3" fill="#a9c6e8" stroke="none"/>
     <!-- Small dragon scale pattern -->
     <path d="M320,250 q10,-10 20,0 q-10,10 -20,0" />
     <path d="M330,270 q10,-10 20,0 q-10,10 -20,0" />
