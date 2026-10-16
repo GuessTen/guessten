@@ -283,7 +283,25 @@
     "Yikes. Just... yikes.",
     "The top hat is disappointed.",
     "That was... a choice.",
-    "Bold strategy. Terrible, but bold."
+    "Bold strategy. Terrible, but bold.",
+    "What the fuck was that?",
+    "Are you fucking kidding me right now?",
+    "Jesus Christ, that was awful.",
+    "I'd roast you but the answers already did.",
+    "Do you even know what a top 10 is?",
+    "That guess was dogshit.",
+    "The cane just filed for divorce.",
+    "Holy shit, that was bad."
+  ];
+  const MASCOT_BRUTAL = [
+    "You're fucking embarrassing yourself.",
+    "I've seen smarter moves from a concussed pigeon.",
+    "This is painful to watch. Genuinely painful.",
+    "Are you doing this on purpose? You have to be.",
+    "Fucking hell. Just... fucking hell.",
+    "Your brain called, it wants a refund.",
+    "I'd tell you to try harder but I'm not sure you can.",
+    "This is the worst shit I've ever seen."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -307,7 +325,11 @@
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     if (type === 'happy') mascotSay(pick(MASCOT_HAPPY));
     else if (type === 'close') mascotSay(pick(MASCOT_CLOSE));
-    else if (type === 'roast') mascotSay(pick(MASCOT_ROAST));
+    else if (type === 'roast') {
+      // go brutal if they're playing really badly (3+ wrong, 2 or fewer correct)
+      const bad = wrongGuesses.length >= 3 && score() <= 2;
+      mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
+    }
     else if (type === 'sudden') mascotSay(pick(MASCOT_SUDDEN_DEATH));
   }
 
