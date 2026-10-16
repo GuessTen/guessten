@@ -445,6 +445,40 @@
     finishGame(true);
   };
 
+  // ---------- Confetti ----------
+  function fireConfetti() {
+    const c = document.createElement('canvas');
+    c.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
+    document.body.appendChild(c);
+    const ctx = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const colors = ['#1e3a5f', '#f4d35e', '#ee964b', '#f95738', '#0d8a72', '#ffffff'];
+    const parts = [];
+    for (let i = 0; i < 150; i++) {
+      parts.push({
+        x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.3,
+        w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 2 + Math.random() * 3, vx: -1.5 + Math.random() * 3,
+        rot: Math.random() * Math.PI * 2, vr: -0.1 + Math.random() * 0.2
+      });
+    }
+    let frames = 0;
+    function tick() {
+      ctx.clearRect(0, 0, c.width, c.height);
+      parts.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vy += 0.05;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      if (++frames < 240) requestAnimationFrame(tick);
+      else c.remove();
+    }
+    tick();
+    buzz([50, 50, 50, 50, 100]);
+  }
+
   // ---------- Finish ----------
   function score() { return Object.keys(guessed).length; }
 
@@ -471,7 +505,7 @@
     if (wasRevealed) mascotSay(pick(MASCOT_BRUTAL));
     else if (finalScore <= 3) mascotSay(pick(MASCOT_BRUTAL));
     else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
-    else if (finalScore === 10) mascotReact('happy');
+    else if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
     // auto-submit to Supabase
     autoSubmit();
   }
@@ -568,11 +602,84 @@
     setTimeout(() => { $('copy-result-btn').textContent = 'Copy result'; }, 2000);
   };
 
+  $('share-image-btn').onclick = async () => {
+    const btn = $('share-image-btn');
+    try {
+      // Draw result card on canvas
+      const c = document.createElement('canvas');
+      c.width = 600; c.height = 420;
+      const x = c.getContext('2d');
+      // background
+      x.fillStyle = '#fdf6e3'; x.fillRect(0, 0, 600, 420);
+      x.fillStyle = '#1e3a5f'; x.fillRect(0, 0, 600, 90);
+      // title
+      x.fillStyle = '#fff'; x.font = 'bold 36px system-ui'; x.textAlign = 'center';
+      x.fillText('Guessten', 300, 55);
+      // puzzle info
+      x.fillStyle = '#1e3a5f'; x.font = '600 24px system-ui';
+      x.fillText(`#${puzzle.puzzleNumber} — ${puzzle.cat.title}`, 300, 140);
+      x.font = 'bold 32px system-ui';
+      x.fillText(`${player}: ${score()}/10${revealed ? ' (revealed)' : ''}`, 300, 190);
+      // grid squares
+      const sq = 44, gap = 8, startX = 300 - (5 * (sq + gap) - gap) / 2;
+      for (let r = 1; r <= 10; r++) {
+        const row = Math.floor((r - 1) / 5), col = (r - 1) % 5;
+        x.fillStyle = guessed[r] ? '#22c55e' : '#e5e0d0';
+        x.fillRect(startX + col * (sq + gap), 220 + row * (sq + gap), sq, sq);
+      }
+      // footer
+      x.fillStyle = '#8a6d3b'; x.font = '20px system-ui';
+      x.fillText('guessten.github.io/guessten', 300, 380);
+
+      const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+      const file = new File([blob], 'guessten-result.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'My Guessten result' });
+      } else {
+        // fallback: download
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'guessten-result.png';
+        a.click(); URL.revokeObjectURL(a.href);
+        btn.textContent = 'Downloaded!';
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') btn.textContent = 'Share failed';
+    }
+    setTimeout(() => { btn.textContent = 'Share image'; }, 2000);
+  };
+
   $('copy-progress-btn').onclick = async () => {
     try { await navigator.clipboard.writeText(encodeProgress()); $('copy-progress-btn').textContent = 'Code copied!'; }
     catch (e) { $('copy-progress-btn').textContent = 'Copy failed'; }
     setTimeout(() => { $('copy-progress-btn').textContent = 'Copy progress code'; }, 2000);
   };
+
+  // ---------- Offline score queue ----------
+  const QUEUE_KEY = 'guessten-pending-scores';
+  function getQueue() {
+    try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function saveQueue(q) {
+    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {}
+  }
+  async function flushQueue() {
+    if (!window.DTDB || !window.DTDB.isReady()) return;
+    const q = getQueue();
+    if (!q.length) return;
+    const remaining = [];
+    for (const payload of q) {
+      try {
+        const res = await window.DTDB.submitScore(payload);
+        if (!res.ok) remaining.push(payload);
+      } catch (e) { remaining.push(payload); }
+    }
+    saveQueue(remaining);
+    if (q.length !== remaining.length) {
+      const st = $('submit-status');
+      if (st) { st.textContent = 'Queued score sent ✓'; st.className = 'ok'; }
+    }
+  }
+  window.addEventListener('online', flushQueue);
 
   async function autoSubmit() {
     const st = $('submit-status');
@@ -583,14 +690,26 @@
     }
     st.textContent = 'Sending score…';
     st.className = '';
-    const res = await window.DTDB.submitScore({
+    const payload = {
       player, day: dayISO, puzzleNumber: puzzle.puzzleNumber,
       category: puzzle.cat.title, score: score(),
       guessesUsed, revealed,
       guessedRanks: Object.keys(guessed).map(Number)
-    });
-    if (res.ok) { st.textContent = 'Score saved ✓'; st.className = 'ok'; submitted = true; }
-    else { st.textContent = 'Could not save score: ' + res.error; st.className = 'err'; }
+    };
+    try {
+      const res = await window.DTDB.submitScore(payload);
+      if (res.ok) { st.textContent = 'Score saved ✓'; st.className = 'ok'; submitted = true; }
+      else throw new Error(res.error);
+    } catch (e) {
+      // Offline or failed — queue it for later
+      const q = getQueue();
+      // don't duplicate the same player/day
+      if (!q.some(p => p.player === payload.player && p.day === payload.day)) q.push(payload);
+      saveQueue(q);
+      st.textContent = 'No connection — score queued, will send automatically ✓';
+      st.className = 'ok';
+      submitted = true;
+    }
   }
 
   // ---------- Tabs ----------
@@ -679,6 +798,24 @@
       sh += `<tr><td><strong>${n}</strong></td><td>${label}</td></tr>`;
     }
     stb.innerHTML = sh + '</table>';
+
+    // Head-to-head records
+    const h2h = window.DTDB.computeHeadToHead(scores);
+    let hh = '<h3>Head-to-Head</h3><table class="standings"><tr><th></th>';
+    for (const n of ROSTER) hh += `<th>${n.slice(0,4)}</th>`;
+    hh += '</tr>';
+    for (const a of ROSTER) {
+      hh += `<tr><td><strong>${a}</strong></td>`;
+      for (const b of ROSTER) {
+        if (a === b) hh += '<td class="muted">—</td>';
+        else {
+          const r = h2h[a][b];
+          hh += `<td>${r.w}-${r.l}${r.t ? '-' + r.t : ''}</td>`;
+        }
+      }
+      hh += '</tr>';
+    }
+    stb.innerHTML += hh + '</table><p class="muted">Days each player beat the other head-to-head.</p>';
   }
 
   // ---------- Archive ----------
@@ -851,7 +988,9 @@
     // Restore or pick name: try URL first, then localStorage backup
     if (!loadFromURL() && !loadFromStorage()) showPicker();
     else { hidePicker(); startGame(); }
-    renderArchive();
+    // Archive renders lazily on first tab tap (faster boot)
+    // Flush any queued offline scores
+    flushQueue();
     // Hide the loading spinner now that the app is ready
     document.getElementById('app-loader').classList.add('hidden');
   }
