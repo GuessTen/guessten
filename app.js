@@ -314,6 +314,7 @@
     const el = $('mascot-speech');
     el.textContent = text;
     el.classList.remove('hidden');
+    positionSpeech();
     // re-trigger animation
     el.style.animation = 'none';
     el.offsetHeight;
@@ -321,6 +322,56 @@
     if (speechTimer) clearTimeout(speechTimer);
     speechTimer = setTimeout(() => el.classList.add('hidden'), 4000);
   }
+
+  // Wandering mascot — roams freely around the screen
+  const mascotEl = document.getElementById('mascot');
+  function wanderMascot() {
+    const size = 80;
+    const pad = 10;
+    const maxX = Math.max(pad, window.innerWidth - size - pad);
+    const maxY = Math.max(pad, window.innerHeight - size - pad);
+    // prefer edges so he doesn't block the game
+    const edge = Math.random();
+    let x, y;
+    if (edge < 0.4) {
+      // left or right edge
+      x = Math.random() < 0.5 ? pad : maxX;
+      y = pad + Math.random() * (maxY - pad);
+    } else if (edge < 0.8) {
+      // top or bottom area
+      x = pad + Math.random() * (maxX - pad);
+      y = Math.random() < 0.5 ? pad + 60 : maxY - 60;
+    } else {
+      // anywhere
+      x = pad + Math.random() * (maxX - pad);
+      y = pad + Math.random() * (maxY - pad);
+    }
+    mascotEl.style.left = x + 'px';
+    mascotEl.style.top = y + 'px';
+    positionSpeech();
+    // wander again in 8-14 seconds
+    setTimeout(wanderMascot, 8000 + Math.random() * 6000);
+  }
+  function positionSpeech() {
+    const speech = $('mascot-speech');
+    if (speech.classList.contains('hidden')) return;
+    const mx = parseInt(mascotEl.style.left || '0', 10);
+    const my = parseInt(mascotEl.style.top || '0', 10);
+    // speech bubble above the mascot
+    speech.style.left = Math.max(10, Math.min(window.innerWidth - 230, mx - 70)) + 'px';
+    speech.style.top = Math.max(10, my - 60) + 'px';
+  }
+  // start wandering after page loads
+  setTimeout(() => {
+    mascotEl.style.left = (window.innerWidth - 90) + 'px';
+    mascotEl.style.top = '70px';
+    wanderMascot();
+  }, 1000);
+  // tapping him makes him wiggle and say something
+  mascotEl.addEventListener('click', () => {
+    const greetings = ["Hey!", "What's up?", "I'm watching...", "Make me proud.", "The mustache sees all."];
+    mascotSay(greetings[Math.floor(Math.random() * greetings.length)]);
+  });
   function mascotReact(type) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     if (type === 'happy') mascotSay(pick(MASCOT_HAPPY));
