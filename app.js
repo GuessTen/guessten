@@ -772,6 +772,27 @@
   }
 
   // ---------- Season ----------
+  // ---------- Season data cache (60s) ----------
+  let seasonCache = { scores: null, at: 0 };
+  const SEASON_CACHE_TTL = 60000;
+  async function getCachedScores() {
+    const now = Date.now();
+    if (seasonCache.scores && now - seasonCache.at < SEASON_CACHE_TTL) {
+      return seasonCache.scores;
+    }
+    const scores = await window.DTDB.fetchScores();
+    seasonCache = { scores, at: now };
+    // also stash for offline fallback
+    try { localStorage.setItem('guessten-cached-scores', JSON.stringify({ scores, at: now })); } catch (e) {}
+    return scores;
+  }
+  function getOfflineScores() {
+    try {
+      const c = JSON.parse(localStorage.getItem('guessten-cached-scores') || 'null');
+      return c ? c.scores : null;
+    } catch (e) { return null; }
+  }
+
   async function renderSeason() {
     const sb = $('season-board'), stb = $('streaks-board');
     if (!window.DTDB || !window.DTDB.isReady()) {
@@ -780,7 +801,19 @@
       return;
     }
     sb.innerHTML = '<p class="muted">Loading…</p>';
-    const scores = await window.DTDB.fetchScores();
+    let scores, offline = false;
+    try {
+      scores = await getCachedScores();
+    } catch (e) {
+      scores = getOfflineScores();
+      offline = true;
+    }
+    if (!scores) {
+      sb.innerHTML = '<p class="muted">Could not load standings. Check your connection.</p>';
+      stb.innerHTML = '';
+      return;
+    }
+    if (offline) sb.innerHTML = '<p class="muted">Offline — showing cached standings.</p>';
     const table = window.DTDB.computeStandings(scores);
     const sorted = ROSTER.slice().sort((a, b) =>
       table[b].wins - table[a].wins || table[b].ties - table[a].ties || table[b].totalScore - table[a].totalScore);
@@ -869,6 +902,24 @@
     } else {
       ticker.classList.add('hidden');
     }
+
+    // Past seasons
+    const histEl = $('seasons-history');
+    try {
+      const seasons = await window.DTDB.fetchSeasons();
+      if (!seasons.length) {
+        histEl.innerHTML = '<p class="muted">Season 1 in progress — past champions will appear here.</p>';
+      } else {
+        let sh2 = '<table class="standings"><tr><th>Season</th><th>Champion</th><th>W-L-T</th><th>Runner-up</th></tr>';
+        for (const s of seasons) {
+          const champ = window.DTDB && s.champion ? s.champion : s.champion;
+          sh2 += `<tr><td>#${s.season_number}</td><td>👑 <strong>${s.champion}</strong></td><td>${s.champion_wins}-${s.champion_losses}-${s.champion_ties}</td><td>${s.runner_up || '—'}</td></tr>`;
+        }
+        histEl.innerHTML = sh2 + '</table>';
+      }
+    } catch (e) {
+      histEl.innerHTML = '<p class="muted">Season 1 in progress.</p>';
+    }
   }
 
   // ---------- Deep Dive Stats ----------
@@ -895,7 +946,13 @@
     }
     board.innerHTML = '<p class="muted">Crunching numbers…</p>';
     const targetId = target.toLowerCase();
-    const scores = await window.DTDB.fetchScores();
+    let scores;
+    try { scores = await getCachedScores(); }
+    catch (e) { scores = getOfflineScores(); }
+    if (!scores) {
+      board.innerHTML = '<p class="muted">Could not load stats. Check your connection.</p>';
+      return;
+    }
     const mine = scores.filter(s => s.player_id === targetId).sort((a, b) => a.day < b.day ? -1 : 1);
     if (!mine.length) {
       board.innerHTML = `<p class="muted">No games yet for ${target}.</p>`;
@@ -1196,6 +1253,23 @@
     flushQueue();
     // Hide the loading spinner now that the app is ready
     document.getElementById('app-loader').classList.add('hidden');
+    // Midnight rollover watcher: if the app is open at Chicago midnight,
+    // auto-switch to the new day's puzzle without requiring a refresh
+    setInterval(() => {
+      const nowISO = chicagoTodayISO();
+      if (nowISO !== dayISO) {
+        dayISO = nowISO;
+        dayIdx = dayIndexFor(dayISO);
+        puzzle = categoryForDay(dayIdx);
+        // clear yesterday's progress
+        try {
+          localStorage.removeItem('guessten-' + player + '-' + nowISO);
+        } catch (e) {}
+        hidePicker();
+        startGame();
+        mascotSay("New day, new puzzle! Fresh start — don't blow it.");
+      }
+    }, 30000);
   }
 
   document.addEventListener('DOMContentLoaded', boot);
