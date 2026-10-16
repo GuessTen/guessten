@@ -349,13 +349,13 @@
       x = pad + Math.random() * (maxX - pad);
       y = pad + Math.random() * (maxY - pad);
     }
-    // add walking wobble while moving
+    // add walking animation while moving
     mascotEl.classList.add('walking');
     mascotEl.style.left = x + 'px';
     mascotEl.style.top = y + 'px';
     positionSpeech();
-    // remove wobble after transition completes
-    setTimeout(() => mascotEl.classList.remove('walking'), 2600);
+    // stop walking animation after transition completes (3s), back to idle
+    setTimeout(() => mascotEl.classList.remove('walking'), 3100);
     // wander again in 5-9 seconds
     setTimeout(wanderMascot, 5000 + Math.random() * 4000);
   }
