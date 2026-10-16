@@ -33,9 +33,11 @@ header h1 {
   font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 #mascot {
-  width: 130px; height: 130px; border-radius: 50%; margin-bottom: 4px;
-  border: 3px solid rgba(255,255,255,0.5); background: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.6); background: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  position: fixed; z-index: 40; pointer-events: auto; cursor: pointer;
+  transition: left 2.5s ease-in-out, top 2.5s ease-in-out;
   animation: mascotBounce 3s ease-in-out infinite;
 }
 @keyframes mascotBounce {
@@ -51,10 +53,10 @@ header h1 {
   75% { transform: rotate(10deg) scale(1.05); }
 }
 #mascot-speech {
-  display: inline-block; background: #fff; color: var(--text);
-  border-radius: 16px; padding: 8px 16px; margin: 8px auto 4px;
-  font-weight: 700; font-size: 0.95rem; max-width: 90%;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.15); position: relative;
+  position: fixed; z-index: 41; background: #fff; color: var(--text);
+  border-radius: 16px; padding: 8px 16px; font-weight: 700; font-size: 0.9rem;
+  max-width: 220px; box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  pointer-events: none; transition: left 2.5s ease-in-out, top 2.5s ease-in-out;
   animation: speechPop 0.25s ease;
 }
 #mascot-speech::before {
