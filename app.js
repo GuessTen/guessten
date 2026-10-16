@@ -263,6 +263,54 @@
     return null;
   }
 
+  // ---------- Mascot reactions ----------
+  const MASCOT_HAPPY = [
+    "Nice! That's the stuff!",
+    "You're on fire!",
+    "Beautiful!",
+    "Textbook!",
+    "The mustache approves!"
+  ];
+  const MASCOT_CLOSE = [
+    "So close!",
+    "Just missed it!",
+    "Ouch — right outside!",
+    "The cane almost dropped on that one!"
+  ];
+  const MASCOT_ROAST = [
+    "Did you even try?",
+    "My grandmother got that one...",
+    "Yikes. Just... yikes.",
+    "The top hat is disappointed.",
+    "That was... a choice.",
+    "Bold strategy. Terrible, but bold."
+  ];
+  const MASCOT_SUDDEN_DEATH = [
+    "Sudden death! No pressure...",
+    "One guess left. The mustache is sweating.",
+    "This is where legends are made. Or broken."
+  ];
+
+  let speechTimer = null;
+  function mascotSay(text) {
+    const el = $('mascot-speech');
+    el.textContent = text;
+    el.classList.remove('hidden');
+    // re-trigger animation
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = '';
+    if (speechTimer) clearTimeout(speechTimer);
+    speechTimer = setTimeout(() => el.classList.add('hidden'), 4000);
+  }
+  function mascotReact(type) {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    if (type === 'happy') mascotSay(pick(MASCOT_HAPPY));
+    else if (type === 'close') mascotSay(pick(MASCOT_CLOSE));
+    else if (type === 'roast') mascotSay(pick(MASCOT_ROAST));
+    else if (type === 'sudden') mascotSay(pick(MASCOT_SUDDEN_DEATH));
+  }
+
   function selectGuess(it) {
     dropdown.classList.add('hidden');
     suppressDropdown = true;
@@ -277,9 +325,16 @@
       if (guessesUsed < MAX_GUESSES - 1) {
         guessesUsed++;
       }
+      mascotReact('happy');
     } else {
       guessesUsed++;
       outsideHits.push({ name: it.name, rank: it.rank });
+      // so close (11-15) vs way off (16+)
+      mascotReact(it.rank <= 15 ? 'close' : 'roast');
+    }
+    // entering sudden death?
+    if (guessesUsed === MAX_GUESSES - 1 && !finished) {
+      setTimeout(() => mascotReact('sudden'), 1200);
     }
     saveToURL();
     renderBoard();
@@ -304,6 +359,11 @@
         if (!finished && guessesUsed < MAX_GUESSES) {
           guessesUsed++;
           wrongGuesses.push(val);
+          mascotReact('roast');
+          // entering sudden death?
+          if (guessesUsed === MAX_GUESSES - 1 && !finished) {
+            setTimeout(() => mascotReact('sudden'), 1200);
+          }
           saveToURL();
           renderBoard();
           checkFinish();
