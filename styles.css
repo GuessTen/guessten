@@ -64,15 +64,15 @@ header {
   border-radius: 0 0 28px 28px; box-shadow: 0 4px 24px rgba(37,99,235,0.25);
 }
 header h1 {
-  margin: 0; font-size: 2.8rem; letter-spacing: 1px; color: #fff;
-  font-family: 'Baloo 2', -apple-system, sans-serif; font-weight: 800;
-  /* fluffy cloud puff effect */
+  margin: 0; font-size: 3rem; letter-spacing: 2px;
+  font-family: 'Rubik Bubbles', -apple-system, sans-serif; font-weight: 400;
+  color: #fffbeb;
+  /* cloud letters: dark navy outline + 3D puff */
+  -webkit-text-stroke: 2px #1e3a5f;
   text-shadow:
-    0 1px 0 #dbeafe,
-    0 2px 0 #bfdbfe,
-    0 3px 0 #93c5fd,
-    0 4px 0 #60a5fa,
-    0 6px 12px rgba(0,0,0,0.25);
+    3px 3px 0 #1e3a5f,
+    6px 6px 0 rgba(30,58,95,0.4),
+    0 8px 16px rgba(0,0,0,0.2);
 }
 #mascot-cloud {
   position: relative; margin: 8px auto 0; width: 120px; height: 130px;
