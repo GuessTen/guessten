@@ -384,12 +384,27 @@
     el.textContent = text;
     el.classList.remove('hidden');
     positionSpeech();
+    // talking animation while he speaks
+    mascotExpress('talking');
     // re-trigger animation
     el.style.animation = 'none';
     el.offsetHeight;
     el.style.animation = '';
     if (speechTimer) clearTimeout(speechTimer);
     speechTimer = setTimeout(() => el.classList.add('hidden'), 4000);
+  }
+
+  // Play a mascot expression animation, then return to idle
+  function mascotExpress(expr) {
+    const m = document.getElementById('mascot');
+    if (!m) return;
+    m.classList.remove('laughing', 'talking', 'disappointed', 'celebrating');
+    // force reflow so re-adding the class restarts the animation
+    void m.offsetWidth;
+    m.classList.add(expr);
+    // clear after animation completes (max ~2s) so idle resumes
+    const durations = { laughing: 1800, talking: 1800, disappointed: 1200, celebrating: 2000 };
+    setTimeout(() => m.classList.remove(expr), durations[expr] || 1500);
   }
 
   // Mascot sits in header below the title (in-flow, not fixed)
@@ -415,11 +430,16 @@
   let consecutiveMisses = 0;
   function mascotReact(type) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    if (type === 'happy') { buzz(30); consecutiveMisses = 0; mascotSay(pick(MASCOT_HAPPY)); }
+    if (type === 'happy') {
+      buzz(30); consecutiveMisses = 0;
+      mascotExpress('celebrating');
+      mascotSay(pick(MASCOT_HAPPY));
+    }
     else if (type === 'close') { buzz([30, 50, 30]); mascotSay(pick(MASCOT_CLOSE)); }
     else if (type === 'roast') {
       buzz([80, 40, 80]);
       consecutiveMisses++;
+      mascotExpress('laughing'); // he laughs at your failure
       // Escalate: 8+ consecutive = apocalyptic, 5+ = nuclear, 3+ wrong & low score = brutal
       if (consecutiveMisses >= 8) {
         buzz([150, 50, 150, 50, 200]);
@@ -429,10 +449,33 @@
         mascotSay(pick(MASCOT_NUCLEAR));
       } else {
         const bad = wrongGuesses.length >= 3 && score() <= 2;
+        if (bad) mascotExpress('disappointed');
         mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
       }
     }
     else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); mascotSay(pick(MASCOT_SUDDEN_DEATH)); }
+  }
+
+  // ---------- Idle chatter ----------
+  // If the player hasn't guessed in 90 seconds, the mascot gets impatient
+  let idleTimer = null;
+  const IDLE_LINES = [
+    "Hello? {name}? You alive in there?",
+    "Take your time, {name}. It's not like the puzzle solves itself. Oh wait.",
+    "You thinking or just staring at the screen like an idiot, {name}?",
+    "Any day now, {name}. ANY. DAY. NOW.",
+    "I've aged three years waiting for your next guess, {name}.",
+    "{name}, the top hat is falling asleep. Guess something, you coward.",
+  ];
+  function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (finished) return;
+    idleTimer = setTimeout(() => {
+      if (!finished && player) {
+        mascotSay(IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)]);
+        resetIdleTimer(); // keep nagging every 90s
+      }
+    }, 90000);
   }
 
   function selectGuess(it) {
@@ -441,6 +484,7 @@
     input.value = '';
     if (finished || guessesUsed >= MAX_GUESSES) return;
     if (Object.values(guessed).some(g => norm(g.name) === norm(it.name))) return; // already guessed
+    resetIdleTimer(); // they guessed, reset the nag timer
 
     if (it.rank >= 1 && it.rank <= 10) {
       guessed[it.rank] = it;
@@ -834,6 +878,24 @@
         p.textContent = 'Still to play: ' + missing.join(', ');
         board.appendChild(p);
       }
+      // Trash-talk: if there's a clear single winner and it's not you, the mascot lets you hear it
+      if (verdict && verdict.winners.length === 1 && !missing.length) {
+        const winnerId = verdict.winners[0];
+        const winnerName = idToName[winnerId] || winnerId;
+        if (player && winnerName !== player && !window._leaderRoastedToday) {
+          window._leaderRoastedToday = dayISO;
+          const taunts = [
+            `{name}, ${winnerName} is kicking your ass today. Embarrassing.`,
+            `Look at ${winnerName} up there, {name}. You gonna let that slide?`,
+            `${winnerName} is running away with it and you're just watching, {name}? Pathetic.`,
+            `{name}, ${winnerName} called. They said you're trash.`,
+          ];
+          setTimeout(() => {
+            mascotExpress('laughing');
+            mascotSay(taunts[Math.floor(Math.random() * taunts.length)]);
+          }, 1500);
+        }
+      }
     });
   }
 
@@ -1223,6 +1285,7 @@
   // ---------- Start ----------
   async function startGame() {
     updateBadge();
+    resetIdleTimer(); // start the "hurry up" nag timer
     $('puzzle-num').textContent = 'Puzzle #' + puzzle.puzzleNumber;
     $('puzzle-date').textContent = dayISO;
     $('category-title').textContent = puzzle.cat.title;
