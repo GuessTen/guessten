@@ -1235,37 +1235,6 @@
   }
   $('switch-player').onclick = () => { showPicker(); };
 
-  // ---------- Push notifications ----------
-  const VAPID_PUBLIC_KEY = 'BBmh7EdsGfc08nULouVTQDbWZgvmggyBxfIAdXW4H-4KlmIOzWffxCjrIoUD_GE4pbGZrsf7ZQfT3vxXqdhjQb0';
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-  }
-  $('notify-btn').onclick = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      alert('Push notifications not supported on this device.');
-      return;
-    }
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') { alert('Notification permission denied.'); return; }
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-      // Save subscription to Supabase
-      if (window.DTDB && player) {
-        await window.DTDB.savePushSubscription(player.toLowerCase(), JSON.stringify(sub.toJSON()));
-        alert('You\'ll get notified when all scores are in! 🔔');
-      }
-    } catch (e) {
-      alert('Could not enable notifications: ' + e.message);
-    }
-  };
-
   // ---------- Picker wiring ----------
   $('confirm-yes').onclick = () => {
     player = pendingName;
