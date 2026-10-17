@@ -35,7 +35,11 @@ body.dark {
   --red: #f87171;
   --orange: #fb923c;
 }
-body.dark { background-image: none; }
+body.dark {
+  background-image: url('dragon-bg-dark.svg');
+  background-repeat: repeat;
+  background-size: 400px 400px;
+}
 /* Theme toggle button */
 #theme-toggle {
   position: absolute; top: 18px; right: 16px;
