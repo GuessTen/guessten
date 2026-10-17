@@ -405,3 +405,23 @@ table.standings td { font-weight: 600; }
 
 footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: var(--muted); }
 footer a { color: var(--muted); }
+
+/* Compact mobile layout — fit the whole game on screen */
+@media (max-width: 480px) {
+  body { padding: 0 10px 24px; font-size: 14px; }
+  header { padding: 16px 0 10px; }
+  header h1 { font-size: 2.4rem; letter-spacing: 2px; }
+  #mascot-cloud { width: 84px; height: 92px; margin: 4px auto 0; }
+  #player-badge { font-size: 0.8rem; margin: 6px 0; }
+  #guesses-left { margin: 8px 0; padding: 5px 14px; font-size: 0.8rem; }
+  #board { gap: 5px; margin: 8px 0; }
+  .board-row { padding: 8px 10px; min-height: 40px; gap: 8px; }
+  .board-row .rank { width: 26px; height: 26px; font-size: 0.8rem; }
+  .board-row .answer { font-size: 0.88rem; }
+  #input-wrap { margin: 8px 0; }
+  #guess-input { padding: 12px 14px; font-size: 0.95rem; }
+  .tab-bar { gap: 4px; margin: 10px 0; }
+  .tab-btn { padding: 8px 4px; font-size: 0.78rem; }
+  #puzzle-num, #puzzle-date { font-size: 0.78rem; }
+  #category-title { font-size: 1.15rem; margin: 6px 0; }
+}
