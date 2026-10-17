@@ -1,13 +1,13 @@
 // Guessten service worker — cache the app shell for fast loads and offline play
-const CACHE = 'guessten-v202610170007';
+const CACHE = 'guessten-v202610170046';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=202610170007',
-  './app.js?v=202610170007',
-  './config.js?v=202610170007',
-  './categories.js?v=202610170007',
-  './supabase-client.js?v=202610170007',
+  './styles.css?v=202610170046',
+  './app.js?v=202610170046',
+  './config.js?v=202610170046',
+  './categories.js?v=202610170046',
+  './supabase-client.js?v=202610170046',
   './manifest.json',
   './mascot.png',
   './dragon-bg.svg',
@@ -47,20 +47,3 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
-// Push notifications (day-complete results, etc.)
-self.addEventListener('push', (e) => {
-  const data = e.data ? e.data.json() : { title: 'Guessten', body: 'Something happened!' };
-  e.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: './mascot.png',
-      badge: './mascot.png',
-      tag: 'guessten-day',
-    })
-  );
-});
-
-self.addEventListener('notificationclick', (e) => {
-  e.notification.close();
-  e.waitUntil(clients.openWindow('./'));
-});
