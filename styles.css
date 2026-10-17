@@ -60,19 +60,26 @@ body {
 }
 header {
   text-align: center; padding: 30px 0 16px; margin: 0 -16px 4px;
-  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
+  background:
+    radial-gradient(ellipse 90px 45px at 12% 30%, rgba(255,255,255,0.35) 50%, transparent 51%),
+    radial-gradient(ellipse 60px 32px at 20% 22%, rgba(255,255,255,0.3) 50%, transparent 51%),
+    radial-gradient(ellipse 110px 55px at 85% 65%, rgba(255,255,255,0.3) 50%, transparent 51%),
+    radial-gradient(ellipse 70px 35px at 76% 55%, rgba(255,255,255,0.28) 50%, transparent 51%),
+    radial-gradient(ellipse 80px 40px at 50% 85%, rgba(255,255,255,0.22) 50%, transparent 51%),
+    linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
   border-radius: 0 0 28px 28px; box-shadow: 0 4px 24px rgba(37,99,235,0.25);
 }
 header h1 {
-  margin: 0; font-size: 3.8rem; letter-spacing: 3px;
+  margin: 0; font-size: 4.2rem; letter-spacing: 3px;
   font-family: 'Rubik Bubbles', -apple-system, sans-serif; font-weight: 400;
   color: #fffdf5;
-  /* soft puffy clouds: light outline, gentle depth */
-  -webkit-text-stroke: 1px #dbeafe;
+  /* fluffy clouds with black outline */
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
   text-shadow:
-    0 0 18px rgba(255,255,255,0.5),
-    2px 2px 0 #93c5fd,
-    4px 4px 8px rgba(30,58,95,0.25);
+    0 0 24px rgba(255,255,255,0.6),
+    4px 4px 0 #000,
+    8px 8px 12px rgba(0,0,0,0.3);
 }
 #mascot-cloud {
   position: relative; margin: 8px auto 0; width: 120px; height: 130px;
