@@ -703,7 +703,7 @@
   }
 
   function resultBlock() {
-    return `Guessten #${puzzle.puzzleNumber} — ${puzzle.cat.title}\n${player}: ${score()}/10${revealed ? ' (revealed)' : ''}\n${gridText()}`;
+    return `Guessten #${puzzle.puzzleNumber} — ${puzzle.cat.title}\n${player}: ${score()}/10${revealed ? ' (revealed)' : ''}\n${gridText()}\nhttps://guessten.github.io/guessten/`;
   }
 
   $('copy-result-btn').onclick = async () => {
