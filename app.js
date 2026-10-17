@@ -1182,6 +1182,7 @@
         <div class="stat-card"><span class="stat-num">${perfects}</span><span class="stat-label">Perfect 10s</span></div>
         <div class="stat-card"><span class="stat-num">${avgGuesses}</span><span class="stat-label">Avg guesses</span></div>
         <div class="stat-card"><span class="stat-num">${streakLabel}</span><span class="stat-label">Streak</span></div>
+        <div class="stat-card"><span class="stat-num">${totalScore}</span><span class="stat-label">Total points</span></div>
       </div>
       <h3>Recent form <span class="muted-sm">(last ${recent.length})</span></h3>
       ${trend}
