@@ -945,10 +945,10 @@
     const table = window.DTDB.computeStandings(scores);
     const sorted = ROSTER.slice().sort((a, b) =>
       table[b].wins - table[a].wins || table[b].ties - table[a].ties || table[b].totalScore - table[a].totalScore);
-    let html = '<table class="standings"><tr><th>Player</th><th>W</th><th>L</th><th>T</th><th>Pts</th></tr>';
+    let html = '<table class="standings"><tr><th>Player</th><th>W</th><th>L</th><th>T</th></tr>';
     for (const n of sorted) {
       const t = table[n];
-      html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td><td>${t.totalScore}</td></tr>`;
+      html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td></tr>`;
     }
     sb.innerHTML = html + '</table><p class="muted">A day counts once all four have played.</p>';
 
