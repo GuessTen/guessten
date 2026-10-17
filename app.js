@@ -281,71 +281,71 @@
     "The cane almost dropped on that one!"
   ];
   const MASCOT_ROAST = [
-    "Did you even try, you dumbass?",
+    "Did you even try, {name}, you dumbass?",
     "My grandmother got that one and she's dead.",
-    "Yikes. Just... fucking yikes.",
+    "Yikes, {name}. Just... fucking yikes.",
     "The top hat is disappointed in you.",
     "That was... a choice. A shit one.",
-    "Bold strategy. Fucking terrible, but bold.",
+    "Bold strategy, {name}. Fucking terrible, but bold.",
     "What the fuck was that?",
-    "Are you fucking kidding me right now?",
+    "Are you fucking kidding me right now, {name}?",
     "Jesus Christ, that was awful.",
-    "I'd roast you but the answers already did.",
+    "I'd roast you but the answers already did, {name}.",
     "Do you even know what a top 10 is, moron?",
-    "That guess was absolute dogshit.",
+    "That guess was absolute dogshit, {name}.",
     "The cane just filed for divorce.",
     "Holy shit, that was bad.",
     "I've seen better guesses from a drunk toddler.",
-    "You play like you're trying to lose.",
+    "You play like you're trying to lose, {name}.",
     "That was so bad I felt it in my mustache.",
-    "Were you dropped on your head as a child?",
-    "Congratulations, that's the dumbest shit I've heard today.",
+    "Were you dropped on your head as a child, {name}?",
+    "Congratulations {name}, that's the dumbest shit I've heard today.",
     "You couldn't guess your way out of a paper bag."
   ];
   const MASCOT_BRUTAL = [
-    "You're fucking embarrassing yourself.",
+    "{name}, you're fucking embarrassing yourself.",
     "I've seen smarter moves from a concussed pigeon.",
-    "This is painful to watch. Genuinely fucking painful.",
-    "Are you doing this on purpose? You have to be.",
-    "Fucking hell. Just... fucking hell.",
-    "Your brain called, it wants a refund.",
+    "This is painful to watch, {name}. Genuinely fucking painful.",
+    "Are you doing this on purpose, {name}? You have to be.",
+    "Fucking hell, {name}. Just... fucking hell.",
+    "Your brain called, {name}, it wants a refund.",
     "I'd tell you to try harder but I'm not sure you can.",
     "This is the worst shit I've ever seen.",
-    "You absolute fucking donkey.",
+    "You absolute fucking donkey, {name}.",
     "Did your parents have any children that lived?",
-    "I'm dumber just from watching you play.",
+    "I'm dumber just from watching you play, {name}.",
     "You guess like someone who's never had a thought.",
-    "Fuck me, that was atrocious.",
+    "Fuck me, {name}, that was atrocious.",
     "I'd rather watch paint dry than watch you play again.",
     "You're the reason the top hat drinks.",
-    "Holy fucking shit, are you even trying? My dead goldfish plays better than this.",
-    "You couldn't find your ass with both hands and a fucking map.",
-    "What the actual fuck is wrong with you? That was braindead.",
+    "Holy fucking shit {name}, are you even trying? My dead goldfish plays better than this.",
+    "You couldn't find your ass with both hands and a fucking map, {name}.",
+    "What the actual fuck is wrong with you, {name}? That was braindead.",
     "I've watched rocks make better decisions than you just did.",
-    "You're playing like you got hit in the head with a fucking brick. Repeatedly.",
-    "Jesus fucking Christ on a cracker, that was godawful.",
-    "Do you have shit for brains? Because that's what that guess tasted like.",
-    "I'd call you a dumbass but that would be an insult to dumbasses everywhere.",
-    "Fuck off with that guess. Seriously, fuck right off.",
-    "You're so fucking bad at this I'm starting to feel sorry for your mother.",
+    "You're playing like you got hit in the head with a fucking brick, {name}. Repeatedly.",
+    "Jesus fucking Christ on a cracker, {name}, that was godawful.",
+    "Do you have shit for brains, {name}? Because that's what that guess tasted like.",
+    "I'd call you a dumbass, {name}, but that would be an insult to dumbasses everywhere.",
+    "Fuck off with that guess, {name}. Seriously, fuck right off.",
+    "You're so fucking bad at this, {name}, I'm starting to feel sorry for your mother.",
     "That guess was so shit I need to bleach my fucking eyeballs.",
-    "Are you fucking illiterate? Can you even read the goddamn question?",
+    "Are you fucking illiterate, {name}? Can you even read the goddamn question?",
     "You play this game like a blindfolded monkey throwing darts at a wall of shit.",
-    "Goddamn, you suck. Like, historically, impressively, mind-blowingly suck.",
-    "I've got hemorrhoids smarter than you, you absolute fucking waste of oxygen."
+    "Goddamn, {name}, you suck. Like, historically, impressively, mind-blowingly suck.",
+    "I've got hemorrhoids smarter than you, {name}, you absolute fucking waste of oxygen."
   ];
   // Escalating roasts: the more consecutive fuck-ups, the meaner he gets
   const MASCOT_NUCLEAR = [
-    "STOP. Just fucking stop. You're done. Put the phone down, you braindead fuck.",
-    "I have watched you fail so many times I've lost the will to fucking live.",
-    "You are the single dumbest motherfucker I have ever had the displeasure of hosting.",
-    "If stupidity was a crime you'd be on fucking death row right now.",
-    "I would rather gargle broken glass than watch you butcher another goddamn guess.",
-    "You're not just bad, you're a catastrophic fucking failure of a human being.",
-    "Every guess you make kills a brain cell. Mine. I'm getting dumber watching this shit.",
-    "Fuck this. Fuck you. Fuck everything. You're hopeless, you absolute shitstain.",
-    "I've seen roadkill with better instincts than you, you fucking Neanderthal.",
-    "Congratulations, you've achieved a level of suck so profound it's almost art. Almost."
+    "STOP, {name}. Just fucking stop. You're done. Put the phone down, you braindead fuck.",
+    "I have watched you fail so many times, {name}, I've lost the will to fucking live.",
+    "You are the single dumbest motherfucker I have ever had the displeasure of hosting, {name}.",
+    "If stupidity was a crime, {name}, you'd be on fucking death row right now.",
+    "I would rather gargle broken glass than watch you butcher another goddamn guess, {name}.",
+    "You're not just bad, {name}, you're a catastrophic fucking failure of a human being.",
+    "Every guess you make kills a brain cell. Mine. I'm getting dumber watching this shit, {name}.",
+    "Fuck this. Fuck you, {name}. Fuck everything. You're hopeless, you absolute shitstain.",
+    "I've seen roadkill with better instincts than you, {name}, you fucking Neanderthal.",
+    "Congratulations {name}, you've achieved a level of suck so profound it's almost art. Almost."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -356,6 +356,8 @@
   let speechTimer = null;
   function mascotSay(text) {
     const el = $('mascot-speech');
+    // Personalize: replace {name} with the player's name
+    if (player) text = text.replace(/\{name\}/g, player);
     el.textContent = text;
     el.classList.remove('hidden');
     positionSpeech();
