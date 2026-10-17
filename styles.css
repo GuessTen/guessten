@@ -129,7 +129,7 @@ header h1 {
   75% { transform: translateX(-50%) translateY(-12px) rotate(5deg); }
 }
 #mascot-speech {
-  position: fixed; z-index: 41; background: #fff; color: var(--text);
+  position: fixed; z-index: 41; background: #fff; color: #111;
   border-radius: 999px; padding: 12px 22px; font-weight: 700; font-size: 0.9rem;
   max-width: 220px; box-shadow: 0 3px 12px rgba(0,0,0,0.15);
   pointer-events: none; transition: left 2.5s ease-in-out, top 2.5s ease-in-out;
