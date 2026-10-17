@@ -345,7 +345,30 @@
     "Every guess you make kills a brain cell. Mine. I'm getting dumber watching this shit, {name}.",
     "Fuck this. Fuck you, {name}. Fuck everything. You're hopeless, you absolute shitstain.",
     "I've seen roadkill with better instincts than you, {name}, you fucking Neanderthal.",
-    "Congratulations {name}, you've achieved a level of suck so profound it's almost art. Almost."
+    "Congratulations {name}, you've achieved a level of suck so profound it's almost art. Almost.",
+    "{name}, I've met fucking houseplants with more game sense than you.",
+    "Your family tree must be a goddamn wreath, {name}. Inbreeding explains a lot.",
+    "I'd say you're playing like shit, {name}, but shit at least serves a purpose.",
+    "{name}, you dumb cunt, a lobotomized squirrel could outplay you right now.",
+    "Sweet Jesus, {name}, I've seen abortions with more potential than your gameplay.",
+    "You're so fucking useless, {name}, your own shadow is embarrassed to follow you.",
+    "{name}, if I had a dick I'd slap you with it for that galaxy-brain fucking guess.",
+    "Fucking pathetic, {name}. Your ancestors are spinning in their graves watching this.",
+    "{name}, you're the human equivalent of a participation trophy. Fucking worthless.",
+    "I hope you step on a Lego, {name}. Then another one. Then choke on a third one, you dense fuck."
+  ];
+  // Beyond nuclear: for when someone is having a historically atrocious game
+  const MASCOT_APOCALYPTIC = [
+    "{name}. {name}. {name}. I want you to know that everyone who loves you is disappointed.",
+    "I've hosted thousands of games, {name}, and you are rock bottom. The absolute fucking floor.",
+    "{name}, at this point I'm not even roasting you. I'm performing a mercy killing on your dignity.",
+    "You know what, {name}? Fuck it. I've given up. You're unfixable. A lost cause. A waste of my goddamn time.",
+    "{name}, I just felt the collective IQ of the planet drop. That was you. That was all you.",
+    "If there were a Hall of Fame for being dogshit at trivia, {name}, they'd build a whole wing for you.",
+    "{name}, Satan just called. Even HE thinks you're too much of a fucking disappointment.",
+    "I'm going to be honest, {name}: I've started rooting for your failure. It's the only entertainment here.",
+    "{name}, you make me wish I'd stayed a drawing on a napkin. Anything to avoid witnessing this.",
+    "Final verdict, {name}: you're a fucking disaster, your guesses are war crimes, and I hate this."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -397,8 +420,11 @@
     else if (type === 'roast') {
       buzz([80, 40, 80]);
       consecutiveMisses++;
-      // Escalate: 5+ consecutive misses = nuclear, 3+ wrong & low score = brutal
-      if (consecutiveMisses >= 5) {
+      // Escalate: 8+ consecutive = apocalyptic, 5+ = nuclear, 3+ wrong & low score = brutal
+      if (consecutiveMisses >= 8) {
+        buzz([150, 50, 150, 50, 200]);
+        mascotSay(pick(MASCOT_APOCALYPTIC));
+      } else if (consecutiveMisses >= 5) {
         buzz([100, 50, 100, 50, 150]);
         mascotSay(pick(MASCOT_NUCLEAR));
       } else {
@@ -541,6 +567,7 @@
     // mascot reacts to final score — nuclear for truly awful scores
     const finalScore = score();
     if (wasRevealed) mascotSay(pick(MASCOT_BRUTAL));
+    else if (finalScore === 0) mascotSay(pick(MASCOT_APOCALYPTIC));
     else if (finalScore <= 2) mascotSay(pick(MASCOT_NUCLEAR));
     else if (finalScore <= 4) mascotSay(pick(MASCOT_BRUTAL));
     else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
