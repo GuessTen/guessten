@@ -796,6 +796,32 @@
   function saveQueue(q) {
     try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {}
   }
+  // Robust submit: 3 attempts with backoff, 12s timeout each, verifies the
+  // row actually landed in the database before reporting success.
+  async function robustSubmit(payload, attempts = 3) {
+    for (let i = 1; i <= attempts; i++) {
+      try {
+        const res = await Promise.race([
+          window.DTDB.submitScore(payload),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 12000))
+        ]);
+        if (!res.ok) throw new Error(res.error || 'submit failed');
+        // Verify the write actually landed
+        const pid = window.DTDB.ROSTER_IDS[payload.player];
+        const check = await Promise.race([
+          window.DTDB.fetchPlayerScore(pid, payload.day),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('verify timeout')), 8000))
+        ]);
+        if (check && check.score === payload.score) return { ok: true };
+        throw new Error('write not confirmed');
+      } catch (e) {
+        if (i === attempts) return { ok: false, error: e.message };
+        await new Promise(r => setTimeout(r, 1500 * i)); // 1.5s, 3s backoff
+      }
+    }
+    return { ok: false, error: 'exhausted retries' };
+  }
+
   async function flushQueue() {
     if (!window.DTDB || !window.DTDB.isReady()) return;
     const q = getQueue();
@@ -803,17 +829,21 @@
     const remaining = [];
     for (const payload of q) {
       try {
-        const res = await window.DTDB.submitScore(payload);
+        const res = await robustSubmit(payload, 2);
         if (!res.ok) remaining.push(payload);
       } catch (e) { remaining.push(payload); }
     }
     saveQueue(remaining);
     if (q.length !== remaining.length) {
       const st = $('submit-status');
-      if (st) { st.textContent = 'Queued score sent ✓'; st.className = 'ok'; }
+      if (st) { st.textContent = 'Score saved ✓'; st.className = 'ok'; }
+      const retryBtn = $('retry-submit-btn');
+      if (retryBtn) retryBtn.classList.add('hidden');
     }
   }
   window.addEventListener('online', flushQueue);
+  // Periodic flush: while the app is open, retry any queued scores every 30s
+  setInterval(() => { if (getQueue().length) flushQueue(); }, 30000);
 
   async function autoSubmit() {
     const st = $('submit-status');
@@ -835,7 +865,7 @@
       guessedRanks: Object.keys(guessed).map(Number)
     };
     try {
-      const res = await window.DTDB.submitScore(payload);
+      const res = await robustSubmit(payload);
       if (res.ok) {
         st.textContent = 'Score saved ✓';
         st.className = 'ok';
