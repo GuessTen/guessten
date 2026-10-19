@@ -642,6 +642,18 @@
     }
     // auto-submit to Supabase
     autoSubmit();
+    // Watchdog: if the submit didn't complete within 20s (e.g. stale code,
+    // exception before UI update), force-show the warning + retry button.
+    // The status can never be left empty/silent.
+    setTimeout(() => {
+      const st = $('submit-status');
+      const retryBtn = $('retry-submit-btn');
+      if (finished && !submitted && st && !/saved ✓/i.test(st.textContent)) {
+        st.textContent = '⚠️ Score NOT confirmed sent — tap below to retry.';
+        st.className = 'warn';
+        if (retryBtn) retryBtn.classList.remove('hidden');
+      }
+    }, 20000);
   }
 
   // Show what you got right and wrong — but never the answers you missed
@@ -1496,10 +1508,14 @@
   })();
   if (themeBtn) themeBtn.onclick = () => applyTheme(!document.body.classList.contains('dark'));
 
-  // Register service worker for installable home-screen app + offline
+  // Register service worker for installable home-screen app + offline.
+  // Force an update check on every load so a stale cached version can never
+  // linger — critical for score-submit reliability.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        if (reg && reg.update) reg.update().catch(() => {});
+      }).catch(() => {});
     });
   }
 })();
