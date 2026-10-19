@@ -253,6 +253,29 @@ header h1 {
 }
 #tab-play { text-align: center; }
 
+/* Live pace projection + category difficulty badge */
+#pace-projection {
+  text-align: center; margin: 8px 0; font-weight: 700; font-size: 0.85rem;
+  color: var(--muted);
+}
+#difficulty-badge {
+  text-align: center; margin: 6px 0 2px; font-weight: 800; font-size: 0.8rem;
+  display: inline-block; border-radius: 999px; padding: 5px 16px;
+}
+#difficulty-badge.diff-brutal { color: #fff; background: linear-gradient(135deg, #dc2626, #991b1b); box-shadow: 0 2px 8px rgba(220,38,38,0.35); }
+#difficulty-badge.diff-chill { color: #fff; background: linear-gradient(135deg, #059669, #065f46); box-shadow: 0 2px 8px rgba(5,150,105,0.35); }
+#difficulty-badge.diff-avg { color: var(--text); background: var(--border); }
+
+/* Personal best alert on the finish screen */
+#pb-alert {
+  margin: 12px auto; padding: 12px 18px; border-radius: var(--radius);
+  background: linear-gradient(135deg, #f4d35e, #ee964b); color: #3a2c00;
+  font-weight: 700; font-size: 1rem; max-width: 420px;
+  box-shadow: 0 4px 16px rgba(238,150,75,0.4);
+  animation: pb-pop 0.5s ease;
+}
+@keyframes pb-pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
 /* Board */
 #board { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; text-align: left; }
 .board-row {
