@@ -59,6 +59,38 @@
     return data[0];
   }
 
+  // Best score for a player across all days except excludeDay (for the
+  // personal-best alert — pass today's ISO so the just-finished game isn't
+  // counted). Returns a number, or null when the player has no history.
+  async function fetchPlayerBest(playerName, excludeDay) {
+    if (!client) return null;
+    const pid = ROSTER_IDS[playerName];
+    if (!pid) return null;
+    let q = client.from('scores').select('score')
+      .eq('player_id', pid).order('score', { ascending: false }).limit(1);
+    if (excludeDay) q = q.neq('day', excludeDay);
+    const { data, error } = await q;
+    if (error || !data || !data.length) return null;
+    return data[0].score;
+  }
+
+  // Average score per category across all submitted scores (for the
+  // category difficulty badge). Returns {title: {avg, plays}}.
+  async function fetchCategoryAverages() {
+    if (!client) return {};
+    const { data, error } = await client.from('scores').select('category,score');
+    if (error || !data) return {};
+    const agg = {};
+    for (const r of data) {
+      if (!r.category) continue;
+      const a = agg[r.category] || (agg[r.category] = { total: 0, n: 0 });
+      a.total += r.score; a.n++;
+    }
+    const out = {};
+    for (const k of Object.keys(agg)) out[k] = { avg: agg[k].total / agg[k].n, plays: agg[k].n };
+    return out;
+  }
+
   // Fetch all scores (for standings). Optionally since a date.
   async function fetchScores() {
     if (!client) return [];
@@ -238,6 +270,7 @@
     ROSTER, ROSTER_IDS,
     configured, init, isReady,
     submitScore, fetchScores, fetchToday, fetchPlayerScore,
+    fetchPlayerBest, fetchCategoryAverages,
     subscribeToday, unsubscribe,
     computeStandings, computeStreaks, judgeDay, groupByDay,
     computeHeadToHead, fetchSeasons
