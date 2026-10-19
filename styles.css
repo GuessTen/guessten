@@ -367,7 +367,7 @@ header h1 {
 #finish-area { text-align: center; padding: 18px 0; }
 #finish-title { font-weight: 800; font-size: 1.5rem; }
 #finish-score { font-size: 2.6rem; font-weight: 800; margin: 10px 0; color: var(--blue); }
-#finish-grid { font-size: 1.5rem; letter-spacing: 3px; margin: 14px 0; line-height: 1.7; }
+#finish-grid { font-size: 1.5rem; letter-spacing: 3px; margin: 14px 0; line-height: 1.7; white-space: nowrap; }
 #submit-status { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
 #submit-status.ok { color: var(--green); font-weight: 700; }
 #submit-status.err { color: var(--red); }
