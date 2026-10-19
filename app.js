@@ -640,20 +640,37 @@
         }
       }).catch(() => {});
     }
-    // auto-submit to Supabase
-    autoSubmit();
-    // Watchdog: if the submit didn't complete within 20s (e.g. stale code,
-    // exception before UI update), force-show the warning + retry button.
-    // The status can never be left empty/silent.
-    setTimeout(() => {
-      const st = $('submit-status');
-      const retryBtn = $('retry-submit-btn');
-      if (finished && !submitted && st && !/saved ✓/i.test(st.textContent)) {
-        st.textContent = '⚠️ Score NOT confirmed sent — tap below to retry.';
-        st.className = 'warn';
-        if (retryBtn) retryBtn.classList.remove('hidden');
-      }
-    }, 20000);
+    // Manual submit: player must tap "Submit score to leaderboard" before
+    // copy/share unlock. Auto-submit is gone — explicit action, explicit
+    // confirmation, no silent failures.
+    const submitBtn = $('submit-score-btn');
+    const copyBtn = $('copy-result-btn');
+    const shareBtn = $('share-image-btn');
+    const setShareLocked = (locked) => {
+      [copyBtn, shareBtn].forEach(b => {
+        if (!b) return;
+        b.disabled = locked;
+        b.style.opacity = locked ? '0.4' : '1';
+      });
+    };
+    setShareLocked(true);
+    if (submitBtn) {
+      submitBtn.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.onclick = async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting…';
+        await autoSubmit();
+        const st = $('submit-status');
+        if (submitted && st && /saved ✓/i.test(st.textContent)) {
+          submitBtn.classList.add('hidden');
+          setShareLocked(false);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '⚠️ Submit score to leaderboard — tap to retry';
+        }
+      };
+    }
   }
 
   // Show what you got right and wrong — but never the answers you missed
@@ -849,8 +866,6 @@
     if (q.length !== remaining.length) {
       const st = $('submit-status');
       if (st) { st.textContent = 'Score saved ✓'; st.className = 'ok'; }
-      const retryBtn = $('retry-submit-btn');
-      if (retryBtn) retryBtn.classList.add('hidden');
     }
   }
   window.addEventListener('online', flushQueue);
@@ -859,17 +874,15 @@
 
   async function autoSubmit() {
     const st = $('submit-status');
-    const retryBtn = $('retry-submit-btn');
-    const showRetry = (show) => { if (retryBtn) retryBtn.classList.toggle('hidden', !show); };
+    if (st) { st.classList.remove('hidden'); }
     if (!window.DTDB || !window.DTDB.isReady()) {
-      st.textContent = '⚠️ Score NOT sent — no connection to the league server.';
-      st.className = 'warn';
-      showRetry(true);
+      if (st) {
+        st.textContent = '⚠️ Score NOT sent — no connection to the league server.';
+        st.className = 'warn';
+      }
       return;
     }
-    st.textContent = 'Sending score…';
-    st.className = '';
-    showRetry(false);
+    if (st) { st.textContent = 'Sending score…'; st.className = ''; }
     const payload = {
       player, day: dayISO, puzzleNumber: puzzle.puzzleNumber,
       category: puzzle.cat.title, score: score(),
@@ -879,42 +892,22 @@
     try {
       const res = await robustSubmit(payload);
       if (res.ok) {
-        st.textContent = 'Score saved ✓';
-        st.className = 'ok';
-        showRetry(false);
+        if (st) { st.textContent = 'Score saved ✓'; st.className = 'ok'; }
         submitted = true;
       }
       else throw new Error(res.error);
     } catch (e) {
-      // Offline or failed — queue it for later
+      // Failed — queue it for later, leave the submit button visible for retry
       const q = getQueue();
-      // don't duplicate the same player/day
       if (!q.some(p => p.player === payload.player && p.day === payload.day)) q.push(payload);
       saveQueue(q);
-      st.textContent = '⚠️ Score NOT sent — will retry automatically, or tap below.';
-      st.className = 'warn';
-      showRetry(true);
-      submitted = true;
+      if (st) {
+        st.textContent = '⚠️ Score NOT sent — tap "Submit score" above to retry.';
+        st.className = 'warn';
+      }
+      // don't mark submitted — the manual button stays active for retry
     }
   }
-
-  // Manual retry: try to flush the queue, then resubmit the current game
-  $('retry-submit-btn').onclick = async () => {
-    const st = $('submit-status');
-    st.textContent = 'Retrying…';
-    st.className = '';
-    await flushQueue();
-    // If this game's score is no longer queued, it went through
-    const stillQueued = getQueue().some(p => p.player === player && p.day === dayISO);
-    if (!stillQueued) {
-      // Try a fresh submit to be sure
-      submitted = false;
-      await autoSubmit();
-    } else {
-      st.textContent = '⚠️ Still not sent — check your connection and try again.';
-      st.className = 'warn';
-    }
-  };
 
   // ---------- Tabs ----------
   document.querySelectorAll('#tabs button').forEach(b => {
@@ -1443,14 +1436,23 @@
       $('finish-grid').textContent = '';
     }
     const st = $('submit-status');
+    st.classList.remove('hidden');
     st.textContent = hasGuessData
       ? 'Your score is locked in for today. See you tomorrow.'
       : 'Your score is locked in for today. Play on the same device to see your full recap. See you tomorrow.';
     st.className = 'ok';
     // show the full recap: category, correct answers, misses
     renderRecap(row.revealed);
-    // hide the copy-result button to keep it clean (score already submitted)
-    $('copy-result-btn').style.display = 'none';
+    // Already submitted — hide the submit button, enable copy/share
+    const submitBtn2 = $('submit-score-btn');
+    if (submitBtn2) submitBtn2.classList.add('hidden');
+    ['copy-result-btn', 'share-image-btn'].forEach(id => {
+      const b = $(id);
+      if (!b) return;
+      b.disabled = false;
+      b.style.opacity = '1';
+      b.style.display = '';
+    });
   }
 
   // ---------- Boot ----------
