@@ -755,8 +755,21 @@
     return s;
   }
 
+  // 50-square grid for copy/paste: all 50 ranked items, 10 per line.
+  // 🟩 = top-10 correct, 🟨 = guessed but outside top 10, ⬜ = missed/unguessed.
+  function gridText50() {
+    const hitRanks = new Set(outsideHits.map(h => h.rank));
+    let s = '';
+    for (let r = 1; r <= 50; r++) {
+      if (r <= 10) s += guessed[r] ? '🟩' : '⬜';
+      else s += hitRanks.has(r) ? '🟨' : '⬜';
+      if (r % 10 === 0 && r < 50) s += '\n';
+    }
+    return s;
+  }
+
   function resultBlock() {
-    return `Guessten #${puzzle.puzzleNumber} — ${puzzle.cat.title}\n${player}: ${score()}/10${revealed ? ' (revealed)' : ''}\n${gridText()}\nhttps://guessten.github.io/guessten/`;
+    return `Guessten #${puzzle.puzzleNumber} — ${puzzle.cat.title}\n${player}: ${score()}/10${revealed ? ' (revealed)' : ''}\n${gridText50()}\nhttps://guessten.github.io/guessten/`;
   }
 
   $('copy-result-btn').onclick = async () => {
