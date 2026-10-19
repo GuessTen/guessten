@@ -175,6 +175,18 @@
     }
     const left = MAX_GUESSES - guessesUsed;
     $('guesses-left').textContent = finished ? '' : `${left} guess${left === 1 ? '' : 'es'} left`;
+    // live projection — "on pace for X/10" from the current hit rate
+    const projEl = $('pace-projection');
+    const found = Object.keys(guessed).length;
+    if (!finished && guessesUsed > 0 && found < 10) {
+      const slotsLeft = 10 - found;
+      const rate = found / guessesUsed;
+      const proj = Math.min(10, found + Math.min(slotsLeft, Math.round(rate * left)));
+      projEl.textContent = `On pace for ${proj}/10`;
+      projEl.classList.remove('hidden');
+    } else {
+      projEl.classList.add('hidden');
+    }
     // outside top-ten hits, sorted numerically by rank
     const oh = $('outside-top-ten');
     oh.innerHTML = '';
@@ -616,6 +628,18 @@
     else if (finalScore <= 4) mascotSay(pick(MASCOT_BRUTAL));
     else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
     else if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
+    // personal best alert — beat your all-time high (today's game excluded)
+    const pbEl = $('pb-alert');
+    pbEl.classList.add('hidden');
+    if (!wasRevealed && finalScore > 0 && window.DTDB && window.DTDB.isReady()) {
+      window.DTDB.fetchPlayerBest(player, dayISO).then(best => {
+        if (best !== null && finalScore > best) {
+          pbEl.innerHTML = `🔥 <strong>New personal best!</strong> Your previous best was ${best}/10.`;
+          pbEl.classList.remove('hidden');
+          mascotReact('happy');
+        }
+      }).catch(() => {});
+    }
     // auto-submit to Supabase
     autoSubmit();
   }
@@ -1254,11 +1278,33 @@
 
   // ---------- Start ----------
   async function startGame() {
+    // Reset all game state for the newly selected player — without this,
+    // the previous player's finished game bleeds into the new player's slot
+    // and can get submitted under the wrong name.
+    finished = false;
+    submitted = false;
+    guessed = {};
+    guessesUsed = 0;
+    revealed = false;
     updateBadge();
     resetIdleTimer(); // start the "hurry up" nag timer
     $('puzzle-num').textContent = 'Puzzle #' + puzzle.puzzleNumber;
     $('puzzle-date').textContent = dayISO;
     $('category-title').textContent = puzzle.cat.title;
+    // category difficulty badge — shows only once there's real history
+    const diffBadge = $('difficulty-badge');
+    diffBadge.classList.add('hidden');
+    diffBadge.classList.remove('diff-brutal', 'diff-chill', 'diff-avg');
+    if (window.DTDB && window.DTDB.isReady()) {
+      window.DTDB.fetchCategoryAverages().then(avgs => {
+        const info = avgs[puzzle.cat.title];
+        if (!info || info.plays < 8) return; // not enough data yet — stay quiet
+        if (info.avg <= 4) { diffBadge.textContent = '🔥 Historically brutal'; diffBadge.classList.add('diff-brutal'); }
+        else if (info.avg >= 7) { diffBadge.textContent = '😌 Historically chill'; diffBadge.classList.add('diff-chill'); }
+        else { diffBadge.textContent = '➖ Average difficulty'; diffBadge.classList.add('diff-avg'); }
+        diffBadge.classList.remove('hidden');
+      }).catch(() => diffBadge.classList.add('hidden'));
+    }
     const src = $('source-link');
     src.innerHTML = puzzle.cat.source_url
       ? `Data: <a href="${puzzle.cat.source_url}" target="_blank" rel="noopener">${escapeHtml(puzzle.cat.source)}</a>`
