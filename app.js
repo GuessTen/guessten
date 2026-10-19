@@ -817,13 +817,17 @@
 
   async function autoSubmit() {
     const st = $('submit-status');
+    const retryBtn = $('retry-submit-btn');
+    const showRetry = (show) => { if (retryBtn) retryBtn.classList.toggle('hidden', !show); };
     if (!window.DTDB || !window.DTDB.isReady()) {
-      st.textContent = 'Score not sent — Supabase not configured.';
-      st.className = 'err';
+      st.textContent = '⚠️ Score NOT sent — no connection to the league server.';
+      st.className = 'warn';
+      showRetry(true);
       return;
     }
     st.textContent = 'Sending score…';
     st.className = '';
+    showRetry(false);
     const payload = {
       player, day: dayISO, puzzleNumber: puzzle.puzzleNumber,
       category: puzzle.cat.title, score: score(),
@@ -832,7 +836,12 @@
     };
     try {
       const res = await window.DTDB.submitScore(payload);
-      if (res.ok) { st.textContent = 'Score saved ✓'; st.className = 'ok'; submitted = true; }
+      if (res.ok) {
+        st.textContent = 'Score saved ✓';
+        st.className = 'ok';
+        showRetry(false);
+        submitted = true;
+      }
       else throw new Error(res.error);
     } catch (e) {
       // Offline or failed — queue it for later
@@ -840,11 +849,30 @@
       // don't duplicate the same player/day
       if (!q.some(p => p.player === payload.player && p.day === payload.day)) q.push(payload);
       saveQueue(q);
-      st.textContent = 'No connection — score queued, will send automatically ✓';
-      st.className = 'ok';
+      st.textContent = '⚠️ Score NOT sent — will retry automatically, or tap below.';
+      st.className = 'warn';
+      showRetry(true);
       submitted = true;
     }
   }
+
+  // Manual retry: try to flush the queue, then resubmit the current game
+  $('retry-submit-btn').onclick = async () => {
+    const st = $('submit-status');
+    st.textContent = 'Retrying…';
+    st.className = '';
+    await flushQueue();
+    // If this game's score is no longer queued, it went through
+    const stillQueued = getQueue().some(p => p.player === player && p.day === dayISO);
+    if (!stillQueued) {
+      // Try a fresh submit to be sure
+      submitted = false;
+      await autoSubmit();
+    } else {
+      st.textContent = '⚠️ Still not sent — check your connection and try again.';
+      st.className = 'warn';
+    }
+  };
 
   // ---------- Tabs ----------
   document.querySelectorAll('#tabs button').forEach(b => {
