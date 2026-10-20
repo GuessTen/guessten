@@ -606,18 +606,17 @@
     if (finished) return;
     finished = true;
     revealed = wasRevealed;
-    if (wasRevealed) {
-      for (const it of puzzle.cat.items) {
-        if (it.rank >= 1 && it.rank <= 10 && !guessed[it.rank]) guessed[it.rank] = it;
-      }
-    }
+    // NOTE: never fill `guessed` with the unguessed answers on reveal —
+    // score() counts guessed, so filling it made a reveal display as a
+    // perfect 10/10 (and would have submitted a fake 10). The real score
+    // is whatever was actually guessed; the recap shows the rest.
     saveToURL();
     renderBoard();
     $('game-area').classList.add('hidden');
     const fa = $('finish-area');
     fa.classList.remove('hidden');
     $('finish-title').textContent = wasRevealed ? 'Answers revealed' : (score() === 10 ? 'Perfect 10!' : 'Puzzle complete');
-    $('finish-score').textContent = `${player}: ${score()}/10`;
+    $('finish-score').textContent = `${player}: ${score()}/10${wasRevealed ? ' (revealed)' : ''}`;
     $('finish-grid').textContent = gridText();
     renderRecap(wasRevealed);
     // mascot reacts to final score — nuclear for truly awful scores
@@ -650,17 +649,13 @@
   function renderRecap(wasRevealed) {
     const el = $('finish-recap');
     el.innerHTML = '';
-    // Correct answers you actually guessed (not auto-filled on reveal)
-    const actuallyGuessed = wasRevealed
-      ? Object.values(guessed).filter(it => {
-          // on reveal, we can't distinguish; show all as revealed
-          return true;
-        })
-      : Object.values(guessed);
-    const correct = actuallyGuessed.sort((a, b) => a.rank - b.rank);
+    // Correct answers the player actually guessed. On reveal, `guessed`
+    // holds only real guesses (revealed answers are NOT added), so this is
+    // always the genuine list.
+    const correct = Object.values(guessed).sort((a, b) => a.rank - b.rank);
     if (correct.length) {
       const h = document.createElement('h3');
-      h.textContent = wasRevealed ? '✓ Answers (revealed)' : '✓ You got';
+      h.textContent = '✓ You got';
       h.className = 'recap-heading recap-correct';
       el.appendChild(h);
       correct.forEach(it => {
@@ -696,10 +691,11 @@
         el.appendChild(d);
       });
     }
-    // Answers you missed (only when game ended, not revealed, and we have guess data)
-    // If guessed is empty, we don't know what was guessed (cross-device), so skip this section
+    // Answers you missed (when the game ended and we have guess data).
+    // For a revealed game these are the answers the reveal showed — they are
+    // listed here, never counted in the score.
     const hasGuessData = Object.keys(guessed).length > 0 || wrongGuesses.length > 0 || outsideHits.length > 0;
-    if (!wasRevealed && hasGuessData) {
+    if (hasGuessData || wasRevealed) {
       const missed = [];
       for (let r = 1; r <= 10; r++) {
         if (!guessed[r]) {
@@ -709,7 +705,7 @@
       }
       if (missed.length) {
         const h = document.createElement('h3');
-        h.textContent = 'You missed';
+        h.textContent = wasRevealed ? 'You missed (revealed)' : 'You missed';
         h.className = 'recap-heading recap-missed';
         el.appendChild(h);
         missed.forEach(it => {
@@ -1476,7 +1472,7 @@
       const fa = $('finish-area');
       fa.classList.remove('hidden');
       $('finish-title').textContent = revealed ? 'Answers revealed' : 'Puzzle complete';
-      $('finish-score').textContent = `${player}: ${score()}/10`;
+      $('finish-score').textContent = `${player}: ${score()}/10${revealed ? ' (revealed)' : ''}`;
       $('finish-grid').textContent = gridText();
       renderRecap(revealed);
       resetSubmitUI();
