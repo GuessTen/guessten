@@ -1,13 +1,13 @@
 // Guessten service worker — cache the app shell for fast loads and offline play
-const CACHE = 'guessten-v202610201628';
+const CACHE = 'guessten-v202610201635';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=202610201628',
-  './app.js?v=202610201628',
-  './config.js?v=202610201628',
-  './categories.js?v=202610201628',
-  './supabase-client.js?v=202610201628',
+  './styles.css?v=202610201635',
+  './app.js?v=202610201635',
+  './config.js?v=202610201635',
+  './categories.js?v=202610201635',
+  './supabase-client.js?v=202610201635',
   './manifest.json',
   './mascot.png',
   './dragon-bg.svg',
@@ -30,19 +30,20 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Network-first for Supabase API calls (live scores must be fresh)
-  if (e.request.url.includes('supabase.co')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-    return;
-  }
-  // Cache-first for app assets
+  if (e.request.method !== 'GET') return;
+  // Network-first for EVERYTHING (Supabase calls and app assets alike):
+  // the app must always run the latest deployed code when online — a
+  // cache-first shell left players stuck on old builds with broken buttons.
+  // The cache is only a fallback for genuinely offline use.
   e.respondWith(
-    caches.match(e.request).then((hit) =>
-      hit || fetch(e.request).then((res) => {
+    fetch(e.request).then((res) => {
+      if (res && res.ok && !e.request.url.includes('supabase.co')) {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy));
-        return res;
-      }).catch(() => caches.match('./index.html'))
+      }
+      return res;
+    }).catch(() =>
+      caches.match(e.request).then((hit) => hit || caches.match('./index.html'))
     )
   );
 });
