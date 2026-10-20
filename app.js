@@ -1369,9 +1369,23 @@
 
   // ---------- Picker wiring ----------
   $('confirm-yes').onclick = () => {
-    player = pendingName;
+    const picked = pendingName;
     hidePicker();
     $('name-confirm').classList.add('hidden');
+    if (picked !== player) {
+      // Switching players: clear the previous player's in-memory state so
+      // nothing leaks into the new player's slot, then restore the picked
+      // player's own saved progress for today if it's on this device.
+      player = picked;
+      resetGameState();
+      try {
+        const raw = localStorage.getItem('guessten-progress');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.day === dayISO && data.player === picked) loadFromStorage();
+        }
+      } catch (e) {}
+    }
     startGame();
   };
   $('confirm-no').onclick = () => { $('name-confirm').classList.add('hidden'); pendingName = null; };
@@ -1384,15 +1398,20 @@
   };
 
   // ---------- Start ----------
-  async function startGame() {
-    // Reset all game state for the newly selected player — without this,
-    // the previous player's finished game bleeds into the new player's slot
-    // and can get submitted under the wrong name.
+  // Clear in-memory game state. Called ONLY on an explicit fresh start
+  // (picking a different player, midnight rollover) — never at the top of
+  // startGame, where it would wipe progress just restored from URL/storage.
+  function resetGameState() {
     finished = false;
     submitted = false;
     guessed = {};
+    wrongGuesses = [];
+    outsideHits = [];
     guessesUsed = 0;
     revealed = false;
+  }
+
+  async function startGame() {
     updateBadge();
     resetIdleTimer(); // start the "hurry up" nag timer
     $('puzzle-num').textContent = 'Puzzle #' + puzzle.puzzleNumber;
@@ -1418,8 +1437,10 @@
       : `Data: ${escapeHtml(puzzle.cat.source)}`;
 
     // Replay lockout: if this player already submitted today, show their
-    // completed run (locked) instead of letting them play again.
-    if (window.DTDB && window.DTDB.isReady() && !finished) {
+    // completed run (locked) instead of letting them play again. Runs even
+    // for a restored finished game, so an already-submitted score shows the
+    // locked screen rather than a redundant submit button.
+    if (window.DTDB && window.DTDB.isReady()) {
       const pid = window.DTDB.ROSTER_IDS[player];
       const existing = await window.DTDB.fetchPlayerScore(pid, dayISO);
       if (existing) {
@@ -1449,13 +1470,16 @@
     // restore copy button (may have been hidden by a previous lockout)
     $('copy-result-btn').style.display = '';
     if (finished) {
+      // Restored finished-but-unsubmitted game: show the finish screen with
+      // the full recap and the manual submit button (no auto-submit).
       $('game-area').classList.add('hidden');
       const fa = $('finish-area');
       fa.classList.remove('hidden');
       $('finish-title').textContent = revealed ? 'Answers revealed' : 'Puzzle complete';
       $('finish-score').textContent = `${player}: ${score()}/10`;
       $('finish-grid').textContent = gridText();
-      if (!submitted) autoSubmit();
+      renderRecap(revealed);
+      resetSubmitUI();
     } else {
       $('finish-area').classList.add('hidden');
       $('game-area').classList.remove('hidden');
@@ -1527,6 +1551,7 @@
           localStorage.removeItem('guessten-' + player + '-' + nowISO);
         } catch (e) {}
         hidePicker();
+        resetGameState();
         startGame();
         mascotSay("New day, new puzzle! Fresh start — don't blow it.");
       }
