@@ -857,6 +857,14 @@
         if (check && check.score === payload.score) return { ok: true };
         throw new Error('write not confirmed');
       } catch (e) {
+        // Log each failed attempt for diagnostics (silent, behind the scenes)
+        if (window.DTDB && window.DTDB.logSubmitError) {
+          window.DTDB.logSubmitError({
+            player: payload.player, day: payload.day,
+            puzzleNumber: payload.puzzleNumber, score: payload.score,
+            error: e.message, attempt: i
+          });
+        }
         if (i === attempts) return { ok: false, error: e.message };
         await new Promise(r => setTimeout(r, 1500 * i)); // 1.5s, 3s backoff
       }
@@ -910,7 +918,14 @@
       }
       else throw new Error(res.error);
     } catch (e) {
-      // Failed — queue it for later, leave the submit button visible for retry
+      // Failed — log it for diagnostics (behind the scenes, players do nothing),
+      // queue it for later, leave the submit button visible for retry
+      if (window.DTDB && window.DTDB.logSubmitError) {
+        window.DTDB.logSubmitError({
+          player, day: dayISO, puzzleNumber: puzzle.puzzleNumber,
+          score: score(), error: e.message, attempt: 3
+        });
+      }
       const q = getQueue();
       if (!q.some(p => p.player === payload.player && p.day === payload.day)) q.push(payload);
       saveQueue(q);
