@@ -640,37 +640,10 @@
         }
       }).catch(() => {});
     }
-    // Manual submit: player must tap "Submit score to leaderboard" before
-    // copy/share unlock. Auto-submit is gone — explicit action, explicit
-    // confirmation, no silent failures.
-    const submitBtn = $('submit-score-btn');
-    const copyBtn = $('copy-result-btn');
-    const shareBtn = $('share-image-btn');
-    const setShareLocked = (locked) => {
-      [copyBtn, shareBtn].forEach(b => {
-        if (!b) return;
-        b.disabled = locked;
-        b.style.opacity = locked ? '0.4' : '1';
-      });
-    };
-    setShareLocked(true);
-    if (submitBtn) {
-      submitBtn.classList.remove('hidden');
-      submitBtn.disabled = false;
-      submitBtn.onclick = async () => {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting…';
-        await autoSubmit();
-        const st = $('submit-status');
-        if (submitted && st && /saved ✓/i.test(st.textContent)) {
-          submitBtn.classList.add('hidden');
-          setShareLocked(false);
-        } else {
-          submitBtn.disabled = false;
-          submitBtn.textContent = '⚠️ Submit score to leaderboard — tap to retry';
-        }
-      };
-    }
+    // Manual submit: reset the submit UI. The button's click handler is wired
+    // once at boot via delegation (see below) so it can never be left dead by
+    // an error elsewhere in the finish flow.
+    resetSubmitUI();
   }
 
   // Show what you got right and wrong — but never the answers you missed
@@ -892,6 +865,49 @@
   window.addEventListener('online', flushQueue);
   // Periodic flush: while the app is open, retry any queued scores every 30s
   setInterval(() => { if (getQueue().length) flushQueue(); }, 30000);
+
+  // ---------- Manual submit UI ----------
+  function setShareLocked(locked) {
+    ['copy-result-btn', 'share-image-btn'].forEach(id => {
+      const b = $(id);
+      if (!b) return;
+      b.disabled = locked;
+      b.style.opacity = locked ? '0.4' : '1';
+    });
+  }
+
+  function resetSubmitUI() {
+    const submitBtn = $('submit-score-btn');
+    if (submitBtn) {
+      submitBtn.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit score to leaderboard';
+    }
+    const st = $('submit-status');
+    if (st) { st.textContent = ''; st.className = 'hidden'; }
+    setShareLocked(true);
+  }
+
+  async function handleSubmitTap() {
+    const submitBtn = $('submit-score-btn');
+    if (!submitBtn || submitBtn.disabled || submitted) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    await autoSubmit();
+    const st = $('submit-status');
+    if (submitted && st && /saved ✓/i.test(st.textContent)) {
+      submitBtn.classList.add('hidden');
+      setShareLocked(false);
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '⚠️ Submit score to leaderboard — tap to retry';
+    }
+  }
+
+  // Delegated listener: wired once, survives any finish-flow errors.
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'submit-score-btn') handleSubmitTap();
+  });
 
   async function autoSubmit() {
     const st = $('submit-status');
