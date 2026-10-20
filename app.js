@@ -747,52 +747,6 @@
     setTimeout(() => { $('copy-result-btn').textContent = 'Copy result'; }, 2000);
   };
 
-  $('share-image-btn').onclick = async () => {
-    const btn = $('share-image-btn');
-    try {
-      // Draw result card on canvas
-      const c = document.createElement('canvas');
-      c.width = 600; c.height = 420;
-      const x = c.getContext('2d');
-      // background
-      x.fillStyle = '#fdf6e3'; x.fillRect(0, 0, 600, 420);
-      x.fillStyle = '#1e3a5f'; x.fillRect(0, 0, 600, 90);
-      // title
-      x.fillStyle = '#fff'; x.font = 'bold 36px system-ui'; x.textAlign = 'center';
-      x.fillText('Guessten', 300, 55);
-      // puzzle info
-      x.fillStyle = '#1e3a5f'; x.font = '600 24px system-ui';
-      x.fillText(`#${puzzle.puzzleNumber} — ${puzzle.cat.title}`, 300, 140);
-      x.font = 'bold 32px system-ui';
-      x.fillText(`${player}: ${score()}/10${revealed ? ' (revealed)' : ''}`, 300, 190);
-      // grid squares
-      const sq = 44, gap = 8, startX = 300 - (5 * (sq + gap) - gap) / 2;
-      for (let r = 1; r <= 10; r++) {
-        const row = Math.floor((r - 1) / 5), col = (r - 1) % 5;
-        x.fillStyle = guessed[r] ? '#22c55e' : '#e5e0d0';
-        x.fillRect(startX + col * (sq + gap), 220 + row * (sq + gap), sq, sq);
-      }
-      // footer
-      x.fillStyle = '#8a6d3b'; x.font = '20px system-ui';
-      x.fillText('guessten.github.io/guessten', 300, 380);
-
-      const blob = await new Promise(res => c.toBlob(res, 'image/png'));
-      const file = new File([blob], 'guessten-result.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'My Guessten result' });
-      } else {
-        // fallback: download
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = 'guessten-result.png';
-        a.click(); URL.revokeObjectURL(a.href);
-        btn.textContent = 'Downloaded!';
-      }
-    } catch (e) {
-      if (e.name !== 'AbortError') btn.textContent = 'Share failed';
-    }
-    setTimeout(() => { btn.textContent = 'Share image'; }, 2000);
-  };
-
   $('copy-progress-btn').onclick = async () => {
     try { await navigator.clipboard.writeText(encodeProgress()); $('copy-progress-btn').textContent = 'Code copied!'; }
     catch (e) { $('copy-progress-btn').textContent = 'Copy failed'; }
@@ -863,15 +817,8 @@
   setInterval(() => { if (getQueue().length) flushQueue(); }, 30000);
 
   // ---------- Manual submit UI ----------
-  function setShareLocked(locked) {
-    ['copy-result-btn', 'share-image-btn'].forEach(id => {
-      const b = $(id);
-      if (!b) return;
-      b.disabled = locked;
-      b.style.opacity = locked ? '0.4' : '1';
-    });
-  }
-
+  // Copy result is NEVER locked: if submit fails, copying the result text is
+  // the player's fallback proof of score. Only the submit button is managed.
   function resetSubmitUI() {
     const submitBtn = $('submit-score-btn');
     if (submitBtn) {
@@ -881,7 +828,6 @@
     }
     const st = $('submit-status');
     if (st) { st.textContent = ''; st.className = 'hidden'; }
-    setShareLocked(true);
   }
 
   async function handleSubmitTap() {
@@ -893,7 +839,6 @@
     const st = $('submit-status');
     if (submitted && st && /saved ✓/i.test(st.textContent)) {
       submitBtn.classList.add('hidden');
-      setShareLocked(false);
     } else {
       submitBtn.disabled = false;
       submitBtn.textContent = '⚠️ Submit score to leaderboard — tap to retry';
@@ -1507,16 +1452,11 @@
     st.className = 'ok';
     // show the full recap: category, correct answers, misses
     renderRecap(row.revealed);
-    // Already submitted — hide the submit button, enable copy/share
+    // Already submitted — hide the submit button (copy is always available)
     const submitBtn2 = $('submit-score-btn');
     if (submitBtn2) submitBtn2.classList.add('hidden');
-    ['copy-result-btn', 'share-image-btn'].forEach(id => {
-      const b = $(id);
-      if (!b) return;
-      b.disabled = false;
-      b.style.opacity = '1';
-      b.style.display = '';
-    });
+    const copyBtn2 = $('copy-result-btn');
+    if (copyBtn2) copyBtn2.style.display = '';
   }
 
   // ---------- Boot ----------
