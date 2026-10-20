@@ -50,7 +50,22 @@
     return { ok: true };
   }
 
-  // Fetch one player's submitted score for a day (for replay lockout).
+  // Log a failed submit attempt for diagnostics. Fire-and-forget: never throws,
+  // never blocks the UI. Requires the submit_errors table (see SQL below).
+  async function logSubmitError({ player, day, puzzleNumber, score, error, attempt }) {
+    if (!client) return;
+    try {
+      await client.from('submit_errors').insert({
+        player_id: ROSTER_IDS[player] || player,
+        day: day,
+        puzzle_number: puzzleNumber,
+        score: score,
+        error: String(error || 'unknown').slice(0, 500),
+        attempt: attempt || 1,
+        user_agent: (typeof navigator !== 'undefined' ? navigator.userAgent : '').slice(0, 300)
+      });
+    } catch (e) { /* diagnostics must never break the game */ }
+  }
   async function fetchPlayerScore(playerId, dayISO) {
     if (!client) return null;
     const { data, error } = await client.from('scores')
@@ -269,7 +284,7 @@
   window.DTDB = {
     ROSTER, ROSTER_IDS,
     configured, init, isReady,
-    submitScore, fetchScores, fetchToday, fetchPlayerScore,
+    submitScore, logSubmitError, fetchScores, fetchToday, fetchPlayerScore,
     fetchPlayerBest, fetchCategoryAverages,
     subscribeToday, unsubscribe,
     computeStandings, computeStreaks, judgeDay, groupByDay,
