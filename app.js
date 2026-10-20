@@ -741,10 +741,19 @@
     return `Guessten #${puzzle.puzzleNumber} — ${puzzle.cat.title}\n${player}: ${score()}/10${revealed ? ' (revealed)' : ''}\n${gridText50()}\nhttps://guessten.github.io/guessten/`;
   }
 
+  // The ONE finish-screen button: copies the result AND submits the score
+  // behind the scenes. Copy always works; the submit rides along silently
+  // and reports through the status line. Re-tapping copy re-attempts a
+  // failed submit until the score lands.
   $('copy-result-btn').onclick = async () => {
     try { await navigator.clipboard.writeText(resultBlock()); $('copy-result-btn').textContent = 'Copied!'; }
     catch (e) { $('copy-result-btn').textContent = 'Copy failed'; }
     setTimeout(() => { $('copy-result-btn').textContent = 'Copy result'; }, 2000);
+    if (finished && !submitted) {
+      const st = $('submit-status');
+      if (st) st.classList.remove('hidden');
+      await autoSubmit();
+    }
   };
 
   $('copy-progress-btn').onclick = async () => {
@@ -816,39 +825,11 @@
   // Periodic flush: while the app is open, retry any queued scores every 30s
   setInterval(() => { if (getQueue().length) flushQueue(); }, 30000);
 
-  // ---------- Manual submit UI ----------
-  // Copy result is NEVER locked: if submit fails, copying the result text is
-  // the player's fallback proof of score. Only the submit button is managed.
+  // ---------- Submit status (submit rides along with Copy result) ----------
   function resetSubmitUI() {
-    const submitBtn = $('submit-score-btn');
-    if (submitBtn) {
-      submitBtn.classList.remove('hidden');
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit score to leaderboard';
-    }
     const st = $('submit-status');
     if (st) { st.textContent = ''; st.className = 'hidden'; }
   }
-
-  async function handleSubmitTap() {
-    const submitBtn = $('submit-score-btn');
-    if (!submitBtn || submitBtn.disabled || submitted) return;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting…';
-    await autoSubmit();
-    const st = $('submit-status');
-    if (submitted && st && /saved ✓/i.test(st.textContent)) {
-      submitBtn.classList.add('hidden');
-    } else {
-      submitBtn.disabled = false;
-      submitBtn.textContent = '⚠️ Submit score to leaderboard — tap to retry';
-    }
-  }
-
-  // Delegated listener: wired once, survives any finish-flow errors.
-  document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'submit-score-btn') handleSubmitTap();
-  });
 
   async function autoSubmit() {
     const st = $('submit-status');
@@ -887,7 +868,7 @@
       if (!q.some(p => p.player === payload.player && p.day === payload.day)) q.push(payload);
       saveQueue(q);
       if (st) {
-        st.textContent = '⚠️ Score NOT sent — tap "Submit score" above to retry.';
+        st.textContent = '⚠️ Score NOT sent yet — tap Copy result again to retry sending.';
         st.className = 'warn';
       }
       // don't mark submitted — the manual button stays active for retry
@@ -1453,8 +1434,6 @@
     // show the full recap: category, correct answers, misses
     renderRecap(row.revealed);
     // Already submitted — hide the submit button (copy is always available)
-    const submitBtn2 = $('submit-score-btn');
-    if (submitBtn2) submitBtn2.classList.add('hidden');
     const copyBtn2 = $('copy-result-btn');
     if (copyBtn2) copyBtn2.style.display = '';
   }
