@@ -1378,6 +1378,13 @@
             const it = byRank[parseInt(r, 10)];
             if (it) guessed[it.rank] = it;
           });
+        } else if (score() !== existing.score || guessesUsed !== existing.guesses_used) {
+          // No rank data in the DB and the locally saved game contradicts
+          // the submitted score (a different run on this device) — never
+          // show a recap that disagrees with the locked score line.
+          guessed = {};
+          wrongGuesses = [];
+          outsideHits = [];
         }
         guessesUsed = existing.guesses_used;
         revealed = existing.revealed;
