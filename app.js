@@ -1252,11 +1252,30 @@
   }
 
   // ---------- Archive ----------
-  function renderArchive(filter) {
+  // Winner lines come from the real scores via DTDB.judgeDay (same win/tie
+  // rules as the standings: all 4 must have played, revealed can't win).
+  // Scores are cached for 60s so archive search typing stays cheap.
+  let archiveScores = null, archiveScoresAt = 0, archiveRenderSeq = 0;
+  async function getArchiveScores() {
+    if (archiveScores && Date.now() - archiveScoresAt < 60000) return archiveScores;
+    if (window.DTDB && DTDB.isReady()) {
+      archiveScores = await DTDB.fetchScores();
+      archiveScoresAt = Date.now();
+    }
+    return archiveScores || [];
+  }
+  async function renderArchive(filter) {
+    const seq = ++archiveRenderSeq;
     const list = $('archive-list');
-    list.innerHTML = '';
     const cats = window.DAILY_TEN_CATEGORIES;
     const q = (filter || '').toLowerCase().trim();
+    let byDay = {};
+    try {
+      const scores = await getArchiveScores();
+      if (seq !== archiveRenderSeq) return; // a newer render superseded this one
+      byDay = (window.DTDB && DTDB.groupByDay) ? DTDB.groupByDay(scores) : {};
+    } catch (e) { /* archive still renders without winner lines */ }
+    list.innerHTML = '';
     let shown = 0;
     for (let i = dayIdx - 1; i >= 0 && i >= dayIdx - 27; i--) {
       const { cat, puzzleNumber } = categoryForDay(i);
@@ -1265,7 +1284,24 @@
       const iso = d.toISOString().slice(0, 10);
       const div = document.createElement('div');
       div.className = 'archive-item';
-      div.innerHTML = `<div class="d">#${puzzleNumber} · ${iso}</div><div class="t">${escapeHtml(cat.title)}</div>`;
+      let winnerHtml = '';
+      const rows = byDay[iso];
+      if (rows && window.DTDB && DTDB.judgeDay) {
+        const verdict = DTDB.judgeDay(rows);
+        if (verdict && verdict.winners.length) {
+          const order = (window.DTDB && DTDB.ROSTER) ? DTDB.ROSTER : ['Jake', 'Kevin', 'Alex', 'Joey'];
+          const winners = verdict.winners.slice().sort(
+            (a, b) => order.findIndex(n => n.toLowerCase() === a) - order.findIndex(n => n.toLowerCase() === b));
+          const label = verdict.tied ? 'Tie:' : 'Winner:';
+          const emoji = verdict.tied ? '🤝' : '👑';
+          const people = winners.map(pid => {
+            const name = order.find(n => n.toLowerCase() === pid) || pid;
+            return `<img class="win-av" src="avatars/${pid}.webp" alt="${escapeHtml(name)}"><span class="win-name">${escapeHtml(name)}</span>`;
+          }).join(' ');
+          winnerHtml = `<div class="w"><span class="win-label">${label}</span> ${people} <span class="win-emoji">${emoji}</span></div>`;
+        }
+      }
+      div.innerHTML = `<div class="d">#${puzzleNumber} · ${iso}</div><div class="t">${escapeHtml(cat.title)}</div>${winnerHtml}`;
       list.appendChild(div);
       shown++;
     }
