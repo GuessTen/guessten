@@ -431,6 +431,10 @@ table.standings td { font-weight: 600; }
 }
 .archive-item .d { font-weight: 800; color: var(--blue); }
 .archive-item .t { color: var(--muted); font-size: 0.92rem; }
+.archive-item .w { margin-top: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 0.95rem; }
+.archive-item .win-label { font-weight: 800; color: var(--text); margin-right: 2px; }
+.archive-item .win-av { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; }
+.archive-item .win-name { font-weight: 700; color: var(--text); }
 
 footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: var(--muted); }
 footer a { color: var(--muted); }
