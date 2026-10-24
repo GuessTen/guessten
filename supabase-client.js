@@ -158,7 +158,6 @@
 
   // Head-to-head: for each pair of players, count days where one beat the other.
   // Only counts days where both played. Win = higher score, tiebreak fewer guesses.
-  // Revealed = automatic loss for that player that day.
   function computeHeadToHead(scores) {
     const byDay = groupByDay(scores);
     const h2h = {};
@@ -180,11 +179,8 @@
       for (let i = 0; i < names.length; i++) {
         for (let j = i + 1; j < names.length; j++) {
           const A = byPid[names[i]], B = byPid[names[j]];
-          const aRev = A.revealed, bRev = B.revealed;
           let result; // 1 = A wins, -1 = B wins, 0 = tie
-          if (aRev && !bRev) result = -1;
-          else if (bRev && !aRev) result = 1;
-          else if (A.score > B.score) result = 1;
+          if (A.score > B.score) result = 1;
           else if (B.score > A.score) result = -1;
           else if (A.guesses_used < B.guesses_used) result = 1;
           else if (B.guesses_used < A.guesses_used) result = -1;
@@ -200,7 +196,10 @@
   }
 
   // For one day's rows (needs all 4 to count): returns { winnerIds[], tied: bool }
-  // revealed = automatic loss. Best = highest score, tiebreak fewest guesses.
+  // Best = highest score, tiebreak fewest guesses. A revealed player's earned
+  // score counts like any other (Jake's ruling, 2026-10-24: "If someone has a
+  // higher score and hits reveal that's okay, they still get win") — hitting
+  // reveal only ends that player's own game.
   function judgeDay(rows) {
     const byPlayer = {};
     for (const r of rows) {
@@ -212,9 +211,7 @@
     }
     const pids = Object.keys(byPlayer);
     if (pids.length < 4) return null; // day doesn't count yet
-    // revealed players can't win
-    const eligible = pids.filter(pid => !byPlayer[pid].revealed);
-    const pool = eligible.length ? eligible : pids;
+    const pool = pids;
     let best = -1, bestG = Infinity;
     for (const pid of pool) {
       const r = byPlayer[pid];
@@ -242,7 +239,6 @@
         const r = verdict.rows[pid];
         table[name].daysPlayed++;
         table[name].totalScore += r.score;
-        if (r.revealed) { table[name].losses++; continue; }
         if (verdict.winners.includes(pid)) {
           if (verdict.tied) table[name].ties++;
           else table[name].wins++;
@@ -269,8 +265,7 @@
         if (!name) continue;
         const r = verdict.rows[pid];
         let result;
-        if (r.revealed) result = 'L';
-        else if (verdict.winners.includes(pid)) result = verdict.tied ? 'T' : 'W';
+        if (verdict.winners.includes(pid)) result = verdict.tied ? 'T' : 'W';
         else result = 'L';
         if (result === 'T') continue; // ties don't break or extend streaks
         const st = streaks[name];
