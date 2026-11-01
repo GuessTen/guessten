@@ -271,7 +271,13 @@
   // ---------- Guessing ----------
   function findItem(name) {
     const q = norm(name);
+    // skip items already guessed (same filter as getSuggestions) so a typed
+    // alias shared by several entries — e.g. repeat performances by one
+    // player — lands on the best-ranked entry not yet guessed
+    const guessedNames = new Set(Object.values(guessed).map(i => norm(i.name)));
+    outsideHits.forEach(h => guessedNames.add(norm(h.name)));
     for (const it of puzzle.cat.items) {
+      if (guessedNames.has(norm(it.name))) continue;
       if (norm(it.name) === q) return it;
       if ((it.aliases || []).some(a => norm(a) === q)) return it;
     }
