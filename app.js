@@ -18,9 +18,11 @@
   }
   function categoryForDay(idx) {
     const cats = window.DAILY_TEN_CATEGORIES;
-    const n = cats.length;
     // Quiz number: Oct 17 (idx=1) = Quiz 1. Oct 16 (idx=0) was the trial.
-    return { cat: cats[((idx % n) + n) % n], puzzleNumber: idx };
+    // NEVER wrap around: if the catalog has no fresh category for this day,
+    // return no category at all — a repeated quiz is never acceptable.
+    if (idx < 0 || idx >= cats.length) return { cat: null, puzzleNumber: idx };
+    return { cat: cats[idx], puzzleNumber: idx };
   }
 
   // ---------- State ----------
@@ -1378,6 +1380,30 @@
   async function startGame() {
     updateBadge();
     resetIdleTimer(); // start the "hurry up" nag timer
+    if (!puzzle.cat) {
+      // No fresh category exists for today. Show a holding screen instead
+      // of ever repeating an old quiz.
+      $('puzzle-num').textContent = 'Puzzle #' + puzzle.puzzleNumber;
+      $('puzzle-date').textContent = dayISO;
+      $('category-title').textContent = 'No new puzzle today';
+      $('difficulty-badge').classList.add('hidden');
+      $('source-link').innerHTML = '';
+      $('game-area').classList.add('hidden');
+      const fa = $('finish-area');
+      fa.classList.remove('hidden');
+      $('finish-title').textContent = 'No new puzzle today';
+      $('finish-score').textContent = 'A fresh puzzle is on the way — check back tomorrow.';
+      $('finish-grid').textContent = '';
+      $('finish-recap').innerHTML = '';
+      $('pb-alert').classList.add('hidden');
+      const cb = $('copy-result-btn');
+      if (cb) cb.style.display = 'none';
+      const st = $('submit-status');
+      st.classList.remove('hidden');
+      st.textContent = 'Guessten never repeats a puzzle. A brand-new one is being prepared.';
+      st.className = 'ok';
+      return;
+    }
     $('puzzle-num').textContent = 'Puzzle #' + puzzle.puzzleNumber;
     $('puzzle-date').textContent = dayISO;
     $('category-title').textContent = puzzle.cat.title;
@@ -1494,8 +1520,11 @@
       if (window.DTDB.init()) console.log('Supabase connected');
       else console.log('Supabase not configured — playing offline');
     }
-    // Restore or pick name: try URL first, then localStorage backup
-    if (!loadFromURL() && !loadFromStorage()) showPicker();
+    // Restore or pick name: try URL first, then localStorage backup.
+    // On a day with no fresh category there is nothing to restore —
+    // go straight to the picker; startGame shows the holding screen.
+    if (!puzzle.cat) showPicker();
+    else if (!loadFromURL() && !loadFromStorage()) showPicker();
     else { hidePicker(); startGame(); }
     // Archive renders lazily on first tab tap (faster boot)
     // Flush any queued offline scores
