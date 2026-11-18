@@ -128,30 +128,6 @@ header h1 {
   25% { transform: translateX(-50%) translateY(-12px) rotate(-5deg); }
   75% { transform: translateX(-50%) translateY(-12px) rotate(5deg); }
 }
-#mascot-speech {
-  position: fixed; z-index: 41; background: #fff; color: #111;
-  border-radius: 999px; padding: 12px 22px; font-weight: 700; font-size: 0.9rem;
-  max-width: 220px; box-shadow: 0 3px 12px rgba(0,0,0,0.15);
-  pointer-events: none; transition: left 2.5s ease-in-out, top 2.5s ease-in-out;
-  animation: speechPop 0.25s ease;
-}
-/* Cloud puffs */
-#mascot-speech::before,
-#mascot-speech::after {
-  content: ''; position: absolute; background: #fff; border-radius: 50%;
-}
-#mascot-speech::before {
-  width: 34px; height: 34px; top: -14px; left: 22px;
-  box-shadow: 38px -8px 0 4px #fff, 78px 2px 0 -2px #fff;
-}
-#mascot-speech::after {
-  width: 22px; height: 22px; bottom: -8px; left: 38px;
-  box-shadow: 26px 4px 0 2px #fff;
-}
-@keyframes speechPop {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
 #player-badge { margin-top: 8px; font-size: 0.9rem; color: rgba(255,255,255,0.92); }
 .link-btn { background: none; border: none; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 0; text-decoration: underline; font-weight: 700; }
 /* Head-to-head table: smaller headers to fit full names */
