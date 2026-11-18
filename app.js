@@ -287,65 +287,8 @@
   }
 
   // ---------- Mascot reactions ----------
-  const MASCOT_HAPPY = [
-    "Nice! That's the stuff!",
-    "You're on fire!",
-    "Beautiful!",
-    "Textbook!",
-    "The mustache approves!"
-  ];
-  const MASCOT_CLOSE = [
-    "So close!",
-    "Just missed it!",
-    "Ouch — right outside!",
-    "The cane almost dropped on that one!"
-  ];
-  const MASCOT_MISS = [
-    "Not that one, {name} — keep going!",
-    "Nope, not on the list. Try another!",
-    "Good swing, {name}. Not a hit, though.",
-    "That one's not in there.",
-    "Not quite — the mustache still believes in you.",
-    "Missed it. Shake it off, {name}.",
-    "Not this time. Plenty of game left.",
-    "Hmm, not that one. What's next?",
-    "Off the board, {name}. Keep hunting.",
-    "That guess has left the building."
-  ];
-  const MASCOT_TOUGH_DAY = [
-    "Tough list today, {name}. Tomorrow's a fresh one.",
-    "That one was a battle, {name}. Good effort.",
-    "Not your day, {name} — happens to everyone.",
-    "The top hat tips to you for finishing, {name}.",
-    "Rough puzzle, {name}. Run it back tomorrow."
-  ];
-  const MASCOT_REVEALED = [
-    "Answers revealed. Now you've seen them for next time.",
-    "Revealed! Study up — tomorrow's a new list."
-  ];
-  const MASCOT_SUDDEN_DEATH = [
-    "Sudden death! No pressure...",
-    "One guess left. The mustache is sweating.",
-    "This is where legends are made. Or broken."
-  ];
-
-  let speechTimer = null;
-  function mascotSay(text) {
-    const el = $('mascot-speech');
-    // Personalize: replace {name} with the player's name
-    if (player) text = text.replace(/\{name\}/g, player);
-    el.textContent = text;
-    el.classList.remove('hidden');
-    positionSpeech();
-    // talking animation while he speaks
-    mascotExpress('talking');
-    // re-trigger animation
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = '';
-    if (speechTimer) clearTimeout(speechTimer);
-    speechTimer = setTimeout(() => el.classList.add('hidden'), 4000);
-  }
+  // The host is silent (Jake, 2026-11-18): he never talks — no speech
+  // bubble, no lines at all. He only reacts visually and with haptics.
 
   // Play a mascot expression animation, then return to idle
   function mascotExpress(expr) {
@@ -360,61 +303,24 @@
     setTimeout(() => m.classList.remove(expr), durations[expr] || 1500);
   }
 
-  // Mascot sits in header below the title (in-flow, not fixed)
-  // Speech bubble positions relative to the mascot's position in the header
-  function positionSpeech() {
-    const speech = $('mascot-speech');
-    if (speech.classList.contains('hidden')) return;
-    const cloud = document.getElementById('mascot-cloud');
-    const rect = cloud.getBoundingClientRect();
-    // speech cloud above the mascot, centered
-    speech.style.left = Math.max(10, rect.left + window.scrollX + rect.width / 2 - 110) + 'px';
-    speech.style.top = Math.max(10, rect.top + window.scrollY - 60) + 'px';
-  }
-  // tapping him makes him wiggle and say something
+  // tapping him makes him wiggle
   document.getElementById('mascot').addEventListener('click', () => {
-    const greetings = ["Hey!", "What's up?", "I'm watching...", "Make me proud.", "The mustache sees all."];
-    mascotSay(greetings[Math.floor(Math.random() * greetings.length)]);
+    mascotExpress('talking');
   });
   function buzz(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
   }
   function mascotReact(type) {
-    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     if (type === 'happy') {
       buzz(30);
       mascotExpress('celebrating');
-      mascotSay(pick(MASCOT_HAPPY));
     }
-    else if (type === 'close') { buzz([30, 50, 30]); mascotSay(pick(MASCOT_CLOSE)); }
+    else if (type === 'close') { buzz([30, 50, 30]); }
     else if (type === 'miss') {
       buzz([40, 30, 40]);
       mascotExpress('disappointed');
-      mascotSay(pick(MASCOT_MISS));
     }
-    else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); mascotSay(pick(MASCOT_SUDDEN_DEATH)); }
-  }
-
-  // ---------- Idle chatter ----------
-  // If the player hasn't guessed in 90 seconds, the mascot gets impatient
-  let idleTimer = null;
-  const IDLE_LINES = [
-    "Still thinking, {name}? Take your time.",
-    "No rush, {name}. The top hat believes in you.",
-    "Take a breath, {name}. The answer's in there somewhere.",
-    "Whenever you're ready, {name}.",
-    "The cane is patient, {name}. What's your next guess?",
-    "Still with me, {name}? Plenty of puzzle left.",
-  ];
-  function resetIdleTimer() {
-    if (idleTimer) clearTimeout(idleTimer);
-    if (finished) return;
-    idleTimer = setTimeout(() => {
-      if (!finished && player) {
-        mascotSay(IDLE_LINES[Math.floor(Math.random() * IDLE_LINES.length)]);
-        resetIdleTimer(); // keep nagging every 90s
-      }
-    }, 90000);
+    else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); }
   }
 
   function selectGuess(it) {
@@ -423,7 +329,6 @@
     input.value = '';
     if (finished || guessesUsed >= MAX_GUESSES) return;
     if (Object.values(guessed).some(g => norm(g.name) === norm(it.name))) return; // already guessed
-    resetIdleTimer(); // they guessed, reset the nag timer
 
     if (it.rank >= 1 && it.rank <= 10) {
       guessed[it.rank] = it;
@@ -546,12 +451,9 @@
     $('finish-score').textContent = `${player}: ${score()}/10${wasRevealed ? ' (revealed)' : ''}`;
     $('finish-grid').textContent = gridText();
     renderRecap(wasRevealed);
-    // mascot reacts to final score — encouraging on tough days, celebration on a perfect 10
+    // host is silent — a perfect 10 still gets confetti
     const finalScore = score();
-    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    if (wasRevealed) mascotSay(pick(MASCOT_REVEALED));
-    else if (finalScore <= 6) mascotSay(pick(MASCOT_TOUGH_DAY));
-    else if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
+    if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
     // personal best alert — beat your all-time high (today's game excluded)
     const pbEl = $('pb-alert');
     pbEl.classList.add('hidden');
@@ -1278,7 +1180,6 @@
 
   async function startGame() {
     updateBadge();
-    resetIdleTimer(); // start the "hurry up" nag timer
     if (!puzzle.cat) {
       // No fresh category exists for today. Show a holding screen instead
       // of ever repeating an old quiz.
@@ -1445,7 +1346,6 @@
         hidePicker();
         resetGameState();
         startGame();
-        mascotSay("New day, new puzzle! Fresh start.");
       }
     }, 30000);
   }
