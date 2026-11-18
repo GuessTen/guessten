@@ -1,13 +1,13 @@
 // Guessten service worker — cache the app shell for fast loads and offline play
-const CACHE = 'guessten-v202611131857';
+const CACHE = 'guessten-v202611181441';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=202611131857',
-  './app.js?v=202611131857',
-  './config.js?v=202611131857',
-  './categories.js?v=202611131857',
-  './supabase-client.js?v=202611131857',
+  './styles.css?v=202611181441',
+  './app.js?v=202611181441',
+  './config.js?v=202611181441',
+  './categories.js?v=202611181441',
+  './supabase-client.js?v=202611181441',
   './manifest.json',
   './mascot.png',
   './dragon-bg.svg',
