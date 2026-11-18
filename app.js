@@ -300,95 +300,28 @@
     "Ouch — right outside!",
     "The cane almost dropped on that one!"
   ];
-  const MASCOT_ROAST = [
-    "Did you even try, {name}, you dumbass?",
-    "My grandmother got that one and she's dead.",
-    "Yikes, {name}. Just... fucking yikes.",
-    "The top hat is disappointed in you.",
-    "That was... a choice. A shit one.",
-    "Bold strategy, {name}. Fucking terrible, but bold.",
-    "What the fuck was that?",
-    "Are you fucking kidding me right now, {name}?",
-    "Jesus Christ, that was awful.",
-    "I'd roast you but the answers already did, {name}.",
-    "Do you even know what a top 10 is, moron?",
-    "That guess was absolute dogshit, {name}.",
-    "The cane just filed for divorce.",
-    "Holy shit, that was bad.",
-    "I've seen better guesses from a drunk toddler.",
-    "You play like you're trying to lose, {name}.",
-    "That was so bad I felt it in my mustache.",
-    "Were you dropped on your head as a child, {name}?",
-    "Congratulations {name}, that's the dumbest shit I've heard today.",
-    "You couldn't guess your way out of a paper bag."
+  const MASCOT_MISS = [
+    "Not that one, {name} — keep going!",
+    "Nope, not on the list. Try another!",
+    "Good swing, {name}. Not a hit, though.",
+    "That one's not in there.",
+    "Not quite — the mustache still believes in you.",
+    "Missed it. Shake it off, {name}.",
+    "Not this time. Plenty of game left.",
+    "Hmm, not that one. What's next?",
+    "Off the board, {name}. Keep hunting.",
+    "That guess has left the building."
   ];
-  const MASCOT_BRUTAL = [
-    "{name}, you're fucking embarrassing yourself.",
-    "I've seen smarter moves from a concussed pigeon.",
-    "This is painful to watch, {name}. Genuinely fucking painful.",
-    "Are you doing this on purpose, {name}? You have to be.",
-    "Fucking hell, {name}. Just... fucking hell.",
-    "Your brain called, {name}, it wants a refund.",
-    "I'd tell you to try harder but I'm not sure you can.",
-    "This is the worst shit I've ever seen.",
-    "You absolute fucking donkey, {name}.",
-    "Did your parents have any children that lived?",
-    "I'm dumber just from watching you play, {name}.",
-    "You guess like someone who's never had a thought.",
-    "Fuck me, {name}, that was atrocious.",
-    "I'd rather watch paint dry than watch you play again.",
-    "You're the reason the top hat drinks.",
-    "Holy fucking shit {name}, are you even trying? My dead goldfish plays better than this.",
-    "You couldn't find your ass with both hands and a fucking map, {name}.",
-    "What the actual fuck is wrong with you, {name}? That was braindead.",
-    "I've watched rocks make better decisions than you just did.",
-    "You're playing like you got hit in the head with a fucking brick, {name}. Repeatedly.",
-    "Jesus fucking Christ on a cracker, {name}, that was godawful.",
-    "Do you have shit for brains, {name}? Because that's what that guess tasted like.",
-    "I'd call you a dumbass, {name}, but that would be an insult to dumbasses everywhere.",
-    "Fuck off with that guess, {name}. Seriously, fuck right off.",
-    "You're so fucking bad at this, {name}, I'm starting to feel sorry for your mother.",
-    "That guess was so shit I need to bleach my fucking eyeballs.",
-    "Are you fucking illiterate, {name}? Can you even read the goddamn question?",
-    "You play this game like a blindfolded monkey throwing darts at a wall of shit.",
-    "Goddamn, {name}, you suck. Like, historically, impressively, mind-blowingly suck.",
-    "I've got hemorrhoids smarter than you, {name}, you absolute fucking waste of oxygen."
+  const MASCOT_TOUGH_DAY = [
+    "Tough list today, {name}. Tomorrow's a fresh one.",
+    "That one was a battle, {name}. Good effort.",
+    "Not your day, {name} — happens to everyone.",
+    "The top hat tips to you for finishing, {name}.",
+    "Rough puzzle, {name}. Run it back tomorrow."
   ];
-  // Escalating roasts: the more consecutive fuck-ups, the meaner he gets
-  const MASCOT_NUCLEAR = [
-    "STOP, {name}. Just fucking stop. You're done. Put the phone down, you braindead fuck.",
-    "I have watched you fail so many times, {name}, I've lost the will to fucking live.",
-    "You are the single dumbest motherfucker I have ever had the displeasure of hosting, {name}.",
-    "If stupidity was a crime, {name}, you'd be on fucking death row right now.",
-    "I would rather gargle broken glass than watch you butcher another goddamn guess, {name}.",
-    "You're not just bad, {name}, you're a catastrophic fucking failure of a human being.",
-    "Every guess you make kills a brain cell. Mine. I'm getting dumber watching this shit, {name}.",
-    "Fuck this. Fuck you, {name}. Fuck everything. You're hopeless, you absolute shitstain.",
-    "I've seen roadkill with better instincts than you, {name}, you fucking Neanderthal.",
-    "Congratulations {name}, you've achieved a level of suck so profound it's almost art. Almost.",
-    "{name}, I've met fucking houseplants with more game sense than you.",
-    "Your family tree must be a goddamn wreath, {name}. Inbreeding explains a lot.",
-    "I'd say you're playing like shit, {name}, but shit at least serves a purpose.",
-    "{name}, you dumb cunt, a lobotomized squirrel could outplay you right now.",
-    "Sweet Jesus, {name}, I've seen abortions with more potential than your gameplay.",
-    "You're so fucking useless, {name}, your own shadow is embarrassed to follow you.",
-    "{name}, if I had a dick I'd slap you with it for that galaxy-brain fucking guess.",
-    "Fucking pathetic, {name}. Your ancestors are spinning in their graves watching this.",
-    "{name}, you're the human equivalent of a participation trophy. Fucking worthless.",
-    "I hope you step on a Lego, {name}. Then another one. Then choke on a third one, you dense fuck."
-  ];
-  // Beyond nuclear: for when someone is having a historically atrocious game
-  const MASCOT_APOCALYPTIC = [
-    "{name}. {name}. {name}. I want you to know that everyone who loves you is disappointed.",
-    "I've hosted thousands of games, {name}, and you are rock bottom. The absolute fucking floor.",
-    "{name}, at this point I'm not even roasting you. I'm performing a mercy killing on your dignity.",
-    "You know what, {name}? Fuck it. I've given up. You're unfixable. A lost cause. A waste of my goddamn time.",
-    "{name}, I just felt the collective IQ of the planet drop. That was you. That was all you.",
-    "If there were a Hall of Fame for being dogshit at trivia, {name}, they'd build a whole wing for you.",
-    "{name}, Satan just called. Even HE thinks you're too much of a fucking disappointment.",
-    "I'm going to be honest, {name}: I've started rooting for your failure. It's the only entertainment here.",
-    "{name}, you make me wish I'd stayed a drawing on a napkin. Anything to avoid witnessing this.",
-    "Final verdict, {name}: you're a fucking disaster, your guesses are war crimes, and I hate this."
+  const MASCOT_REVEALED = [
+    "Answers revealed. Now you've seen them for next time.",
+    "Revealed! Study up — tomorrow's a new list."
   ];
   const MASCOT_SUDDEN_DEATH = [
     "Sudden death! No pressure...",
@@ -446,32 +379,18 @@
   function buzz(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
   }
-  // Track consecutive fuck-ups for escalation
-  let consecutiveMisses = 0;
   function mascotReact(type) {
     const pick = arr => arr[Math.floor(Math.random() * arr.length)];
     if (type === 'happy') {
-      buzz(30); consecutiveMisses = 0;
+      buzz(30);
       mascotExpress('celebrating');
       mascotSay(pick(MASCOT_HAPPY));
     }
     else if (type === 'close') { buzz([30, 50, 30]); mascotSay(pick(MASCOT_CLOSE)); }
-    else if (type === 'roast') {
-      buzz([80, 40, 80]);
-      consecutiveMisses++;
-      mascotExpress('laughing'); // he laughs at your failure
-      // Escalate: 8+ consecutive = apocalyptic, 5+ = nuclear, 3+ wrong & low score = brutal
-      if (consecutiveMisses >= 8) {
-        buzz([150, 50, 150, 50, 200]);
-        mascotSay(pick(MASCOT_APOCALYPTIC));
-      } else if (consecutiveMisses >= 5) {
-        buzz([100, 50, 100, 50, 150]);
-        mascotSay(pick(MASCOT_NUCLEAR));
-      } else {
-        const bad = wrongGuesses.length >= 3 && score() <= 2;
-        if (bad) mascotExpress('disappointed');
-        mascotSay(pick(bad ? MASCOT_BRUTAL : MASCOT_ROAST));
-      }
+    else if (type === 'miss') {
+      buzz([40, 30, 40]);
+      mascotExpress('disappointed');
+      mascotSay(pick(MASCOT_MISS));
     }
     else if (type === 'sudden') { buzz([50, 30, 50, 30, 100]); mascotSay(pick(MASCOT_SUDDEN_DEATH)); }
   }
@@ -480,12 +399,12 @@
   // If the player hasn't guessed in 90 seconds, the mascot gets impatient
   let idleTimer = null;
   const IDLE_LINES = [
-    "Hello? {name}? You alive in there?",
-    "Take your time, {name}. It's not like the puzzle solves itself. Oh wait.",
-    "You thinking or just staring at the screen like an idiot, {name}?",
-    "Any day now, {name}. ANY. DAY. NOW.",
-    "I've aged three years waiting for your next guess, {name}.",
-    "{name}, the top hat is falling asleep. Guess something, you coward.",
+    "Still thinking, {name}? Take your time.",
+    "No rush, {name}. The top hat believes in you.",
+    "Take a breath, {name}. The answer's in there somewhere.",
+    "Whenever you're ready, {name}.",
+    "The cane is patient, {name}. What's your next guess?",
+    "Still with me, {name}? Plenty of puzzle left.",
   ];
   function resetIdleTimer() {
     if (idleTimer) clearTimeout(idleTimer);
@@ -518,7 +437,7 @@
       guessesUsed++;
       outsideHits.push({ name: it.name, rank: it.rank });
       // so close (11-15) vs way off (16+)
-      mascotReact(it.rank <= 15 ? 'close' : 'roast');
+      mascotReact(it.rank <= 15 ? 'close' : 'miss');
     }
     // entering sudden death?
     if (guessesUsed === MAX_GUESSES - 1 && !finished) {
@@ -547,7 +466,7 @@
         if (!finished && guessesUsed < MAX_GUESSES) {
           guessesUsed++;
           wrongGuesses.push(val);
-          mascotReact('roast');
+          mascotReact('miss');
           // entering sudden death?
           if (guessesUsed === MAX_GUESSES - 1 && !finished) {
             setTimeout(() => mascotReact('sudden'), 1200);
@@ -627,13 +546,11 @@
     $('finish-score').textContent = `${player}: ${score()}/10${wasRevealed ? ' (revealed)' : ''}`;
     $('finish-grid').textContent = gridText();
     renderRecap(wasRevealed);
-    // mascot reacts to final score — nuclear for truly awful scores
+    // mascot reacts to final score — encouraging on tough days, celebration on a perfect 10
     const finalScore = score();
-    if (wasRevealed) mascotSay(pick(MASCOT_BRUTAL));
-    else if (finalScore === 0) mascotSay(pick(MASCOT_APOCALYPTIC));
-    else if (finalScore <= 2) mascotSay(pick(MASCOT_NUCLEAR));
-    else if (finalScore <= 4) mascotSay(pick(MASCOT_BRUTAL));
-    else if (finalScore <= 6) mascotSay(pick(MASCOT_ROAST));
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    if (wasRevealed) mascotSay(pick(MASCOT_REVEALED));
+    else if (finalScore <= 6) mascotSay(pick(MASCOT_TOUGH_DAY));
     else if (finalScore === 10) { mascotReact('happy'); setTimeout(fireConfetti, 500); }
     // personal best alert — beat your all-time high (today's game excluded)
     const pbEl = $('pb-alert');
@@ -938,24 +855,6 @@
         p.className = 'muted';
         p.textContent = 'Still to play: ' + missing.join(', ');
         board.appendChild(p);
-      }
-      // Trash-talk: if there's a clear single winner and it's not you, the mascot lets you hear it
-      if (verdict && verdict.winners.length === 1 && !missing.length) {
-        const winnerId = verdict.winners[0];
-        const winnerName = idToName[winnerId] || winnerId;
-        if (player && winnerName !== player && !window._leaderRoastedToday) {
-          window._leaderRoastedToday = dayISO;
-          const taunts = [
-            `{name}, ${winnerName} is kicking your ass today. Embarrassing.`,
-            `Look at ${winnerName} up there, {name}. You gonna let that slide?`,
-            `${winnerName} is running away with it and you're just watching, {name}? Pathetic.`,
-            `{name}, ${winnerName} called. They said you're trash.`,
-          ];
-          setTimeout(() => {
-            mascotExpress('laughing');
-            mascotSay(taunts[Math.floor(Math.random() * taunts.length)]);
-          }, 1500);
-        }
       }
     });
   }
@@ -1546,7 +1445,7 @@
         hidePicker();
         resetGameState();
         startGame();
-        mascotSay("New day, new puzzle! Fresh start — don't blow it.");
+        mascotSay("New day, new puzzle! Fresh start.");
       }
     }, 30000);
   }
