@@ -85,7 +85,7 @@ header h1 {
   position: relative; margin: 8px auto 0; width: 120px; height: 130px;
 }
 #mascot {
-  width: 90px; height: 90px; border-radius: 50%; object-fit: cover;
+  width: 90px; height: 90px; border-radius: 50%; object-fit: cover; object-position: center 22%;
   /* blend the circle into the cloud: same white, soft edge */
   border: none;
   box-shadow: 0 0 0 5px rgba(217,165,20,0.95), 0 0 0 9px rgba(255,255,255,0.85), 0 4px 16px rgba(0,0,0,0.15);
