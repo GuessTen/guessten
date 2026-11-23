@@ -94,12 +94,6 @@ header h1 {
   z-index: 1;
   animation: mascotIdle 3s ease-in-out infinite;
 }
-/* Cloud sits below him, he nestles into it */
-.cloud-svg {
-  position: absolute; bottom: 0; left: 0; width: 120px; height: 60px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-  z-index: 2;
-}
 @keyframes mascotIdle {
   0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
   50% { transform: translateX(-50%) translateY(-6px) rotate(2deg); }
