@@ -804,6 +804,9 @@
       return;
     }
     if (offline) sb.innerHTML = '<p class="muted">Offline — showing cached standings.</p>';
+    const seasons = window.DTDB.splitSeasons(scores);
+    const curSeason = seasons[seasons.length - 1];
+    $('season-heading').textContent = 'Season ' + curSeason.number + ' Standings';
     const table = window.DTDB.computeStandings(scores);
     const sorted = ROSTER.slice().sort((a, b) =>
       table[b].wins - table[a].wins || table[b].ties - table[a].ties || table[b].totalScore - table[a].totalScore);
@@ -812,7 +815,7 @@
       const t = table[n];
       html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td></tr>`;
     }
-    sb.innerHTML = html + '</table><p class="muted">A day counts once all four have played.</p>';
+    sb.innerHTML = html + '</table><p class="muted">Season ' + curSeason.number + ' · A day counts once all four have played. First to 10 wins closes the season.</p>';
 
     const streaks = window.DTDB.computeStreaks(scores);
     let sh = '<table class="standings"><tr><th>Player</th><th>Streak</th></tr>';
@@ -893,22 +896,26 @@
       ticker.classList.add('hidden');
     }
 
-    // Past seasons
+    // Past seasons — computed from the full score history, so a closed
+    // season's final table is preserved exactly as it finished.
     const histEl = $('seasons-history');
-    try {
-      const seasons = await window.DTDB.fetchSeasons();
-      if (!seasons.length) {
-        histEl.innerHTML = '<p class="muted">Season 1 in progress — past champions will appear here.</p>';
-      } else {
-        let sh2 = '<table class="standings"><tr><th>Season</th><th>Champion</th><th>W-L-T</th><th>Runner-up</th></tr>';
-        for (const s of seasons) {
-          const champ = window.DTDB && s.champion ? s.champion : s.champion;
-          sh2 += `<tr><td>#${s.season_number}</td><td>👑 <strong>${s.champion}</strong></td><td>${s.champion_wins}-${s.champion_losses}-${s.champion_ties}</td><td>${s.runner_up || '—'}</td></tr>`;
+    const closedSeasons = seasons.filter(s => s.closed);
+    if (!closedSeasons.length) {
+      histEl.innerHTML = '<p class="muted">No completed seasons yet — the first champion will appear here.</p>';
+    } else {
+      let sh2 = '';
+      for (const s of closedSeasons.slice().reverse()) {
+        const t = s.table;
+        const order = ROSTER.slice().sort((a, b) =>
+          t[b].wins - t[a].wins || t[b].ties - t[a].ties || t[b].totalScore - t[a].totalScore);
+        sh2 += `<h3>Season ${s.number} · 👑 ${s.champion} · ${s.startDay} – ${s.endDay}</h3>`;
+        sh2 += '<table class="standings"><tr><th>Player</th><th>W</th><th>L</th><th>T</th><th>Pts</th></tr>';
+        for (const n of order) {
+          sh2 += `<tr><td><strong>${n}</strong>${n === s.champion ? ' 🥇' : ''}</td><td>${t[n].wins}</td><td>${t[n].losses}</td><td>${t[n].ties}</td><td>${t[n].totalScore}</td></tr>`;
         }
-        histEl.innerHTML = sh2 + '</table>';
+        sh2 += '</table>';
       }
-    } catch (e) {
-      histEl.innerHTML = '<p class="muted">Season 1 in progress.</p>';
+      histEl.innerHTML = sh2;
     }
   }
 
@@ -949,7 +956,7 @@
       return;
     }
 
-    const table = window.DTDB.computeStandings(scores);
+    const table = window.DTDB.computeAllTimeStandings(scores);
     const streaks = window.DTDB.computeStreaks(scores);
     const t = table[target], st = streaks[target];
 
