@@ -156,7 +156,7 @@
     ROSTER.forEach(n => {
       const b = document.createElement('button');
       b.className = 'name-option';
-      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-pick" /><span>${n}</span>`;
+      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp?v=202611230436" alt="${n}" class="avatar-pick" /><span>${n}</span>`;
       b.onclick = () => { pendingName = n; $('confirm-name').textContent = n; $('name-confirm').classList.remove('hidden'); };
       opts.appendChild(b);
     });
@@ -747,7 +747,7 @@
         const isTie = isWinner && winners.length > 1;
         const isLoser = sorted.length > 1 && r === sorted[sorted.length - 1] && !isWinner;
         const hat = isTie ? '<span class="avatar-hat">🤝</span>' : isWinner ? '<span class="avatar-hat">👑</span>' : isLoser ? '<span class="avatar-hat">🤡</span>' : '';
-        div.innerHTML = `<span class="who"><span class="avatar-wrap"><img src="avatars/${name.toLowerCase()}.webp" alt="${escapeHtml(name)}" class="avatar-score" />${hat}</span>${escapeHtml(name)}${r.revealed ? ' (revealed)' : ''}</span>
+        div.innerHTML = `<span class="who"><span class="avatar-wrap"><img src="avatars/${name.toLowerCase()}.webp?v=202611230436" alt="${escapeHtml(name)}" class="avatar-score" />${hat}</span>${escapeHtml(name)}${r.revealed ? ' (revealed)' : ''}</span>
           <span><span class="sc">${r.score}/10</span> <span class="sub">${r.guesses_used} guesses</span></span>`;
         board.appendChild(div);
       }
@@ -813,7 +813,7 @@
     let html = '<table class="standings"><tr><th>Player</th><th>W</th><th>L</th><th>T</th></tr>';
     for (const n of sorted) {
       const t = table[n];
-      html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td></tr>`;
+      html += `<tr><td><span class="avatar-wrap"><img src="avatars/${n.toLowerCase()}.webp?v=202611230436" alt="${n}" class="avatar-score" /></span><strong>${n}</strong></td><td>${t.wins}</td><td>${t.losses}</td><td>${t.ties}</td></tr>`;
     }
     sb.innerHTML = html + '</table><p class="muted">Season ' + curSeason.number + ' · A day counts once all four have played. First to 10 wins closes the season.</p>';
 
@@ -927,7 +927,7 @@
     ROSTER.forEach(n => {
       const b = document.createElement('button');
       b.className = 'stats-pick' + ((statsPlayer || player) === n ? ' active' : '');
-      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp" alt="${n}" class="avatar-inline" /> ${n}`;
+      b.innerHTML = `<img src="avatars/${n.toLowerCase()}.webp?v=202611230436" alt="${n}" class="avatar-inline" /> ${n}`;
       b.onclick = () => { statsPlayer = n; renderStats(); };
       el.appendChild(b);
     });
@@ -1038,7 +1038,7 @@
 
     board.innerHTML = `
       <div class="stats-hero">
-        <img src="avatars/${target.toLowerCase()}.webp" alt="${target}" class="stats-avatar" />
+        <img src="avatars/${target.toLowerCase()}.webp?v=202611230436" alt="${target}" class="stats-avatar" />
         <div>
           <h3>${target}</h3>
           <p class="muted">${mine.length} games · ${t.wins}W-${t.losses}L-${t.ties}T</p>
@@ -1112,7 +1112,7 @@
           const emoji = verdict.tied ? '🤝' : '👑';
           const people = winners.map(pid => {
             const name = order.find(n => n.toLowerCase() === pid) || pid;
-            return `<img class="win-av" src="avatars/${pid}.webp" alt="${escapeHtml(name)}"><span class="win-name">${escapeHtml(name)}</span>`;
+            return `<img class="win-av" src="avatars/${pid}.webp?v=202611230436" alt="${escapeHtml(name)}"><span class="win-name">${escapeHtml(name)}</span>`;
           }).join(' ');
           winnerHtml = `<div class="w"><span class="win-label">${label}</span> ${people} <span class="win-emoji">${emoji}</span></div>`;
         }
@@ -1135,7 +1135,7 @@
       $('player-badge').classList.remove('hidden');
       $('player-name').textContent = player;
       const av = $('player-avatar');
-      av.src = `avatars/${player.toLowerCase()}.webp`;
+      av.src = `avatars/${player.toLowerCase()}.webp?v=202611230436`;
       av.alt = player;
     } else $('player-badge').classList.add('hidden');
   }
