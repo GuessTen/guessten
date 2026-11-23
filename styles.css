@@ -369,8 +369,8 @@ body.dark #submit-status.warn { background: #220a33; border-color: #a855f7; colo
 .recap-correct-item { border-color: var(--green); background: var(--green-bg); }
 .recap-wrong-item { border-color: #8c2f2f; background: #2b0f0f; color: #f3a3a3; }
 .recap-outside-item { border-color: #7c3aed; background: #220a33; color: #d8b4fe; }
-.recap-missed { color: var(--muted); }
-.recap-missed-item { border-color: var(--border); background: var(--surface2); color: var(--muted); }
+.recap-missed { color: var(--gold); }
+.recap-missed-item { border-color: #7c3aed; background: #220a33; color: #e9d5ff; }
 
 /* Player avatars */
 .avatar-pick { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 10px; }
