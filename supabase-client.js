@@ -159,6 +159,7 @@
   // Head-to-head: for each pair of players, count days where one beat the other.
   // Only counts days where both played. Win = higher score, tiebreak fewer guesses.
   function computeHeadToHead(scores) {
+    scores = seasonScores(scores, currentSeason(scores));
     const byDay = groupByDay(scores);
     const h2h = {};
     for (const a of ROSTER) {
@@ -223,8 +224,71 @@
     return { winners, tied: winners.length > 1, rows: byPlayer };
   }
 
-  // Compute season W-L-T + total score per player.
+  // Split all scores into seasons. A season closes on the day a player
+  // reaches 10 wins; the next counted day starts a new season. Incomplete
+  // days (fewer than 4 players) never count and never break a season.
+  function splitSeasons(scores) {
+    const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
+    const byDay = groupByDay(scores);
+    const days = Object.keys(byDay).sort();
+    const blank = () => {
+      const t = {};
+      for (const n of ROSTER) t[n] = { wins: 0, losses: 0, ties: 0, totalScore: 0, daysPlayed: 0 };
+      return t;
+    };
+    const seasons = [];
+    let cur = { number: 1, startDay: null, endDay: null, closed: false, champion: null, runnerUp: null, table: blank(), days: [] };
+    for (const day of days) {
+      const verdict = judgeDay(byDay[day]);
+      if (!verdict) continue;
+      if (!cur.startDay) cur.startDay = day;
+      cur.endDay = day;
+      cur.days.push(day);
+      for (const pid of Object.keys(verdict.rows)) {
+        const name = idToName[pid];
+        if (!name) continue;
+        const r = verdict.rows[pid];
+        cur.table[name].daysPlayed++;
+        cur.table[name].totalScore += r.score;
+        if (verdict.winners.includes(pid)) {
+          if (verdict.tied) cur.table[name].ties++;
+          else cur.table[name].wins++;
+        } else {
+          cur.table[name].losses++;
+        }
+      }
+      const champ = ROSTER.find(n => cur.table[n].wins >= 10);
+      if (champ) {
+        cur.closed = true;
+        cur.champion = champ;
+        const others = ROSTER.filter(n => n !== champ).sort((a, b) =>
+          cur.table[b].wins - cur.table[a].wins || cur.table[b].ties - cur.table[a].ties || cur.table[b].totalScore - cur.table[a].totalScore);
+        cur.runnerUp = others[0];
+        seasons.push(cur);
+        cur = { number: cur.number + 1, startDay: null, endDay: null, closed: false, champion: null, runnerUp: null, table: blank(), days: [] };
+      }
+    }
+    seasons.push(cur);
+    return seasons;
+  }
+
+  function currentSeason(scores) {
+    const seasons = splitSeasons(scores);
+    return seasons[seasons.length - 1];
+  }
+
+  function seasonScores(scores, season) {
+    const set = new Set(season.days);
+    return scores.filter(s => set.has(s.day));
+  }
+
+  // Current-season W-L-T + total score per player.
   function computeStandings(scores) {
+    return currentSeason(scores).table;
+  }
+
+  // Career (all-time) W-L-T + total score per player.
+  function computeAllTimeStandings(scores) {
     const table = {};
     for (const name of ROSTER) table[name] = { wins: 0, losses: 0, ties: 0, totalScore: 0, daysPlayed: 0 };
     const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
@@ -253,6 +317,7 @@
   // Current win/loss streak per player (most recent counted days, chronological).
   function computeStreaks(scores) {
     const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
+    scores = seasonScores(scores, currentSeason(scores));
     const byDay = groupByDay(scores);
     const days = Object.keys(byDay).sort();
     const streaks = {};
@@ -282,7 +347,7 @@
     submitScore, logSubmitError, fetchScores, fetchToday, fetchPlayerScore,
     fetchPlayerBest, fetchCategoryAverages,
     subscribeToday, unsubscribe,
-    computeStandings, computeStreaks, judgeDay, groupByDay,
+    computeStandings, computeAllTimeStandings, splitSeasons, currentSeason, computeStreaks, judgeDay, groupByDay,
     computeHeadToHead, fetchSeasons
   };
 })();
