@@ -341,6 +341,36 @@
     return streaks;
   }
 
+  // General topic per category title, from the catalog's topic tags.
+  function topicByTitle() {
+    const map = {};
+    for (const c of (window.DAILY_TEN_CATEGORIES || [])) if (c.title) map[c.title] = c.topic || 'Other';
+    return map;
+  }
+
+  // Per-player average score by general topic across every recorded game.
+  // Returns { Name: [{ topic, days, avg }] } sorted best-first.
+  function computeTopicStats(scores) {
+    const idToName = { jake: 'Jake', kevin: 'Kevin', alex: 'Alex', joey: 'Joey' };
+    const topics = topicByTitle();
+    const acc = {};
+    for (const name of ROSTER) acc[name] = {};
+    for (const r of scores) {
+      const name = idToName[r.player_id];
+      if (!name) continue;
+      const t = topics[r.category] || 'Other';
+      const b = acc[name][t] || (acc[name][t] = { total: 0, days: 0 });
+      b.total += r.score; b.days++;
+    }
+    const result = {};
+    for (const name of ROSTER) {
+      result[name] = Object.entries(acc[name])
+        .map(([topic, v]) => ({ topic, days: v.days, avg: v.total / v.days }))
+        .sort((a, b) => b.avg - a.avg);
+    }
+    return result;
+  }
+
   window.DTDB = {
     ROSTER, ROSTER_IDS,
     configured, init, isReady,
@@ -348,6 +378,6 @@
     fetchPlayerBest, fetchCategoryAverages,
     subscribeToday, unsubscribe,
     computeStandings, computeAllTimeStandings, splitSeasons, currentSeason, computeStreaks, judgeDay, groupByDay,
-    computeHeadToHead, fetchSeasons
+    computeHeadToHead, fetchSeasons, computeTopicStats
   };
 })();
