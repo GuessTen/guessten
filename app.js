@@ -1065,6 +1065,43 @@
       <h3>Clutch factor</h3>
       <p>💪 ${blowouts} blowout win${blowouts === 1 ? '' : 's'} (3+ pts) · 😰 ${nailbiters} nail-biter${nailbiters === 1 ? '' : 's'} (1 pt)</p>
     `;
+    renderTopicStrengths(scores);
+  }
+
+  // ---------- Topic Strengths (all players, career-wide) ----------
+  // Headline Best/Worst only counts topics with 2+ days played, so a single
+  // lucky day can't fake a specialty; the full table shows every topic.
+  function renderTopicStrengths(scores) {
+    const el = $('topic-board');
+    if (!el || !window.DTDB || !DTDB.computeTopicStats) return;
+    const stats = DTDB.computeTopicStats(scores);
+    el.innerHTML = ROSTER.map(name => {
+      const rows = stats[name] || [];
+      if (!rows.length) return '';
+      const games = rows.reduce((s, r) => s + r.days, 0);
+      const qualified = rows.filter(r => r.days >= 2);
+      const best = qualified[0];
+      const worst = qualified[qualified.length - 1];
+      const pills = (best && worst && best.topic !== worst.topic) ? `
+        <div class="topic-pills">
+          <div class="topic-pill best"><span class="topic-pill-label">Best topic</span>${best.topic} — ${best.avg.toFixed(1)} avg</div>
+          <div class="topic-pill worst"><span class="topic-pill-label">Worst topic</span>${worst.topic} — ${worst.avg.toFixed(1)} avg</div>
+        </div>` : '';
+      const topTopic = rows[0].topic, bottomTopic = rows[rows.length - 1].topic;
+      const list = rows.map(r => `<li class="${r.topic === topTopic ? 'topic-top' : r.topic === bottomTopic ? 'topic-bottom' : ''}"><span>${r.topic}</span><span class="topic-nums"><strong>${r.avg.toFixed(1)}</strong> <span class="muted-sm">${r.days} day${r.days === 1 ? '' : 's'}</span></span></li>`).join('');
+      return `
+      <div class="topic-card">
+        <div class="stats-hero">
+          <img src="avatars/${name.toLowerCase()}.webp?v=202611230436" alt="${name}" class="stats-avatar" />
+          <div>
+            <h3>${name}${name === 'Jake' ? ' 👑' : ''}</h3>
+            <p class="muted">${games} games</p>
+          </div>
+        </div>
+        ${pills}
+        <ul class="stat-list">${list}</ul>
+      </div>`;
+    }).join('');
   }
 
   // ---------- Archive ----------
